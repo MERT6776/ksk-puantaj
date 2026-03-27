@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ (KULLANICI ADI & BAŞLIKLAR DÜZELTİLDİ)
+# 2. DİL VE VERİ SÖZLÜĞÜ
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler", 
@@ -15,10 +15,10 @@ LANGS = {
         "week": "HAFTA", "week_suffix": "PUANTAJ DURUM TAKVİMİ", "appeal_head": "İtiraz Merkezi", "appeal_topic": "Konu Seçiniz...", 
         "appeal_days": "Gün Seçiniz...", "send": "ALİCAN BAYAT'A GÖNDER", "lang": "Dil Seçimi", 
         "note": "Ek Notunuz", "legend": "Kısaltma Rehberi (Filtrelemek İçin Tıklayın)",
-        "audit": "Veri Kaynağı: Mert DÜZCÜK Onaylı Sistem", "update": "Son Güncelleme"
+        "audit": "Veri Kaynağı: Mert DÜZCÜK Onaylı Sistem", "update": "Son Güncelleme", "shift_end": "Mesai Tamamlandı"
     },
-    "EN": {"title": "FILYOS PHASE-2", "welcome_morning": "Good Morning", "welcome_day": "Good Day", "welcome_evening": "Good Evening", "welcome_night": "Good Night", "sicil": "USERNAME", "pass": "BIRTH YEAR", "login": "LOGIN", "paid_days": "Paid Days", "phys_days": "Physical Days", "total_over": "TOTAL OVERTIME", "week": "WEEK", "week_suffix": "STATUS TABLE", "appeal_head": "Appeal Center", "appeal_topic": "Topic...", "appeal_days": "Days...", "send": "SEND", "lang": "Language", "note": "Note", "legend": "Legend", "audit": "Source: Mert DÜZCÜK Approved", "update": "Update"},
-    "UZ": {"title": "FİLYOS FAZ-2", "welcome_morning": "Xayrli tong", "welcome_day": "Xayrli kun", "welcome_evening": "Xayrli kech", "welcome_night": "Xayrli tun", "sicil": "FOYDALANUVCHI NOMI", "pass": "TUG'ILGAN YILI", "login": "KIRISH", "paid_days": "To'lanadigan Kun", "phys_days": "Ishlagan Kun", "total_over": "UMUMIY ISH VAQTI", "week": "HAFTA", "week_suffix": "PUANTAJ JADVALI", "appeal_head": "E'tiroz Markazi", "appeal_topic": "Mavzu...", "appeal_days": "Kunlar...", "send": "YUBORISH", "lang": "Til", "note": "Eslatma", "legend": "Qisqartmalar", "audit": "Tasdiqlangan: Mert DÜZCÜK", "update": "Yangilanish"}
+    "EN": {"title": "FILYOS PHASE-2", "welcome_morning": "Good Morning", "welcome_day": "Good Day", "welcome_evening": "Good Evening", "welcome_night": "Good Night", "sicil": "USERNAME", "pass": "BIRTH YEAR", "login": "LOGIN", "paid_days": "Paid Days", "phys_days": "Physical Days", "total_over": "TOTAL OVERTIME", "week": "WEEK", "week_suffix": "STATUS TABLE", "appeal_head": "Appeal Center", "appeal_topic": "Topic...", "appeal_days": "Days...", "send": "SEND", "lang": "Language", "note": "Note", "legend": "Legend", "audit": "Source: Mert DÜZCÜK Approved", "update": "Update", "shift_end": "Shift Completed"},
+    "UZ": {"title": "FİLYOS FAZ-2", "welcome_morning": "Xayrli tong", "welcome_day": "Xayrli kun", "welcome_evening": "Xayrli kech", "welcome_night": "Xayrli tun", "sicil": "FOYDALANUVCHI NOMI", "pass": "TUG'ILGAN YILI", "login": "KIRISH", "paid_days": "To'lanadigan Kun", "phys_days": "Ishlagan Kun", "total_over": "UMUMIY ISH VAQTI", "week": "HAFTA", "week_suffix": "PUANTAJ JADVALI", "appeal_head": "E'tiroz Markazi", "appeal_topic": "Mavzu...", "appeal_days": "Kunlar...", "send": "YUBORISH", "lang": "Til", "note": "Eslatma", "legend": "Qisqartmalar", "audit": "Tasdiqlangan: Mert DÜZCÜK", "update": "Yangilanish", "shift_end": "Ish yakunlandi"}
 }
 
 STATUS_MAP = {"HTÇ": "Şirkete Fazladan Pazar Çalışması", "HÇ": "Kendine Fazladan Pazar Çalışması", "HT": "Hafta Tatili (Gün Kesilmez)", "Üİ": "Personel Çalışmadı (Gün Kesilir)", "N": "Normal Çalışma", "B": "Bayram Tatili (Gün Kesilmez)", "BÇ": "Bayramda Çalışma"}
@@ -29,11 +29,17 @@ if 'lang' not in st.session_state: st.session_state['lang'] = "TR"
 if 'filter_status' not in st.session_state: st.session_state['filter_status'] = None
 L = LANGS[st.session_state['lang']]
 
-# Türkiye Saati (Python tarafında statik başlangıç için)
-now_tr_init = datetime.utcnow() + timedelta(hours=3)
-clock_init = now_tr_init.strftime("%d.%m.%Y | %H:%M:%S")
+# Türkiye Saati ve Mesai Hesaplama
+now_tr = datetime.utcnow() + timedelta(hours=3)
+clock_init = now_tr.strftime("%d.%m.%Y | %H:%M:%S")
 
-# 3. CSS VE JAVASCRIPT (SAAT VE BAŞLIK DÜZELTME)
+# Vardiya İlerlemesi (08:00 - 18:00 arası baz alınmıştır)
+start_hour = 8
+end_hour = 18
+current_hour_decimal = now_tr.hour + now_tr.minute / 60
+shift_pct = max(0, min(100, (current_hour_decimal - start_hour) / (end_hour - start_hour) * 100))
+
+# 3. CSS VE JAVASCRIPT
 st.markdown(f"""
     <style>
     .stApp {{ background: transparent !important; }}
@@ -51,6 +57,17 @@ st.markdown(f"""
         text-align: right; color: #ffd700; font-family: 'Courier New', monospace;
         font-weight: 900; font-size: 18px; letter-spacing: 1.5px;
         padding: 10px; text-shadow: 2px 2px 4px black; min-height: 30px;
+    }}
+
+    /* VARDİYA İLERLEME ÇUBUĞU */
+    .shift-container {{
+        width: 100%; background: rgba(255, 255, 255, 0.1); border-radius: 10px;
+        height: 12px; margin: 10px 0; border: 1px solid rgba(255, 215, 0, 0.3); overflow: hidden;
+    }}
+    .shift-bar {{
+        width: {shift_pct}%; height: 100%; 
+        background: linear-gradient(90deg, #b8860b, #ffd700);
+        box-shadow: 0 0 10px #ffd700; transition: width 0.5s ease-in-out;
     }}
 
     .glass-card {{
@@ -105,9 +122,7 @@ st.markdown(f"""
         const s = String(trTime.getSeconds()).padStart(2, '0');
         el.innerHTML = d + "." + m + "." + y + " | " + h + ":" + i + ":" + s;
     }}
-    // Saniyede bir güncelle
     setInterval(updateClock, 1000);
-    // Sayfa yüklendiği an hemen bir kere daha tetikle
     window.addEventListener('load', updateClock);
     </script>
     """, unsafe_allow_html=True)
@@ -123,11 +138,11 @@ def load_data():
 
 df = load_data()
 
-# Selamlama (Türkiye Saatini Baz Alır)
-hour = (datetime.utcnow() + timedelta(hours=3)).hour
-if 5 <= hour < 12: greet_key = "welcome_morning"
-elif 12 <= hour < 18: greet_key = "welcome_day"
-elif 18 <= hour < 23: greet_key = "welcome_evening"
+# Selamlama Belirleme
+hour_greet = now_tr.hour
+if 5 <= hour_greet < 12: greet_key = "welcome_morning"
+elif 12 <= hour_greet < 18: greet_key = "welcome_day"
+elif 18 <= hour_greet < 23: greet_key = "welcome_evening"
 else: greet_key = "welcome_night"
 
 if 'logged_in' not in st.session_state: st.session_state['logged_in'] = False
@@ -153,6 +168,14 @@ else:
     row_s = u_df[u_df['N-M'].astype(str).str.contains('SAAT', na=False, case=False)].iloc[0]
 
     st.markdown(f"## {L[greet_key]}, {row_g['AD SOYAD']} 👷‍♂️")
+    
+    # Vardiya İlerleme Göstergesi
+    if current_hour_decimal < end_hour:
+        st.markdown(f'<div class="shift-container"><div class="shift-bar"></div></div>', unsafe_allow_html=True)
+        st.caption(f"🏁 Paydos Saati: {end_hour}:00")
+    else:
+        st.success(f"✅ {L['shift_end']}")
+
     st.caption(f"{row_g['GÖREVİ']} | {row_g['FİORİ NO']}")
 
     c1, c2, c3 = st.columns(3)
@@ -173,7 +196,6 @@ else:
     t_cols = [c for c in df.columns if '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
     for h_no, i in enumerate(range(0, len(t_cols), 7), 1):
         hafta = t_cols[i:i+7]
-        # Başlık Düzeltildi: Sadece "📁 HAFTA 1 PUANTAJ DURUM TAKVİMİ" yazar.
         with st.expander(f"📁 {L['week']} {h_no} {L['week_suffix']}"):
             st.markdown('<div class="day-grid">', unsafe_allow_html=True)
             for t_col in hafta:
@@ -206,7 +228,7 @@ else:
         st.link_button("ALİCAN BEY'E GÖNDER", f"https://wa.me/905435314160?text={urllib.parse.quote(msg)}")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown(f'<div style="text-align:center; font-size:10px; color:rgba(255,255,255,0.4); margin-top:25px;">{L["audit"]}<br>{L["update"]}: {now_tr_init.strftime("%d.%m.%Y %H:%M")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align:center; font-size:10px; color:rgba(255,255,255,0.4); margin-top:25px;">{L["audit"]}<br>{L["update"]}: {now_tr.strftime("%d.%m.%Y %H:%M")}</div>', unsafe_allow_html=True)
 
 # ✒️ POWERED BY MERT DÜZCÜK
 st.markdown('<div class="mert-signature">POWERED BY Mert DÜZCÜK</div>', unsafe_allow_html=True)
