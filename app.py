@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ (AYLAR VE GÜNLER DİNAMİK)
+# 2. DİL VE VERİ SÖZLÜĞÜ (AYLAR VE GÜNLER KESİNLEŞTİ)
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler", 
@@ -14,18 +14,26 @@ LANGS = {
         "login": "GİRİŞ YAP", "paid_days": "Ödenecek Gün", "phys_days": "Fiziki Gün", "total_over": "TOPLAM MESAİ",
         "week": "HAFTA", "week_suffix": "PUANTAJ DURUM TAKVİMİ", "appeal_head": "İtiraz Merkezi", 
         "send": "ALİCAN BAYAT'A GÖNDER", "lang": "Dil Seçimi", "note": "Ek Notunuz", 
-        "legend": "Kısaltma Rehberi (Filtrelemek İçin Tıklayın)", "shift_end": "Mesai Tamamlandı"
+        "legend": "KISALTMALAR VE ANLAMLARI", "shift_end": "Mesai Tamamlandı"
     },
-    "EN": {"title": "FILYOS PHASE-2", "welcome_morning": "Good Morning", "welcome_day": "Good Day", "welcome_evening": "Good Evening", "welcome_night": "Good Night", "sicil": "USERNAME", "pass": "BIRTH YEAR", "login": "LOGIN", "paid_days": "Paid Days", "phys_days": "Physical Days", "total_over": "TOTAL OVERTIME", "week": "WEEK", "week_suffix": "STATUS TABLE", "appeal_head": "Appeal Center", "send": "SEND", "lang": "Language", "note": "Note", "legend": "Legend", "shift_end": "Shift Completed"},
-    "UZ": {"title": "FİLYOS FAZ-2", "welcome_morning": "Xayrli tong", "welcome_day": "Xayrli kun", "welcome_evening": "Xayrli kech", "welcome_night": "Xayrli tun", "sicil": "FOYDALANUVCHI NOMI", "pass": "TUG'ILGAN YILI", "login": "KIRISH", "paid_days": "To'lanadigan Kun", "phys_days": "Ishlagan Kun", "total_over": "UMUMIY ISH VAQTI", "week": "HAFTA", "week_suffix": "PUANTAJ JADVALI", "appeal_head": "E'tiroz Markazi", "send": "YUBORISH", "lang": "Til", "note": "Eslatma", "legend": "Qisqartmalar", "shift_end": "Ish yakunlandi"}
+    "EN": {"title": "FILYOS PHASE-2", "welcome_morning": "Good Morning", "welcome_day": "Good Day", "welcome_evening": "Good Evening", "welcome_night": "Good Night", "sicil": "USERNAME", "pass": "BIRTH YEAR", "login": "LOGIN", "paid_days": "Paid Days", "phys_days": "Physical Days", "total_over": "TOTAL OVERTIME", "week": "WEEK", "week_suffix": "STATUS TABLE", "appeal_head": "Appeal Center", "send": "SEND", "lang": "Language", "note": "Note", "legend": "LEGEND", "shift_end": "Shift Completed"},
+    "UZ": {"title": "FİLYOS FAZ-2", "welcome_morning": "Xayrli tong", "welcome_day": "Xayrli kun", "welcome_evening": "Xayrli kech", "welcome_night": "Xayrli tun", "sicil": "FOYDALANUVCHI NOMI", "pass": "TUG'ILGAN YILI", "login": "KIRISH", "paid_days": "To'lanadigan Kun", "phys_days": "Ishlagan Kun", "total_over": "UMUMIY ISH VAQTI", "week": "HAFTA", "week_suffix": "PUANTAJ JADVALI", "appeal_head": "E'tiroz Markazi", "send": "YUBORISH", "lang": "Til", "note": "Eslatma", "legend": "QISQARTMALAR", "shift_end": "Ish yakunlandi"}
 }
 
-STATUS_MAP = {"HTÇ": "Şirkete Fazladan Pazar Çalışması", "HÇ": "Kendine Fazladan Pazar Çalışması", "HT": "Hafta Tatili (Gün Kesilmez)", "Üİ": "Personel Çalışmadı (Gün Kesilir)", "N": "Normal Çalışma", "B": "Bayram Tatili (Gün Kesilmez)", "BÇ": "Bayramda Çalışma"}
+STATUS_MAP = {
+    "HTÇ": "Şirkete Fazladan Pazar Çalışması",
+    "HÇ": "Kendine Fazladan Pazar Çalışması",
+    "HT": "Hafta Tatili (Gün Kesilmez)",
+    "Üİ": "Personel Çalışmadı (Gün Kesilir)",
+    "N": "Normal Çalışma",
+    "B": "Bayram Tatili (Gün Kesilmez)",
+    "BÇ": "Bayramda Çalışma"
+}
+
 AYLAR_TR = {1: "OCAK", 2: "ŞUBAT", 3: "MART", 4: "NİSAN", 5: "MAYIS", 6: "HAZİRAN", 7: "TEMMUZ", 8: "AĞUSTOS", 9: "EYLÜL", 10: "EKİM", 11: "KASIM", 12: "ARALIK"}
 GUNLER_TR = ["PZT", "SALI", "ÇAR", "PER", "CUMA", "CMT", "PAZ"]
 
 if 'lang' not in st.session_state: st.session_state['lang'] = "TR"
-if 'filter_status' not in st.session_state: st.session_state['filter_status'] = None
 L = LANGS[st.session_state['lang']]
 
 # Türkiye Saati ve Vardiya (08:00 - 18:00)
@@ -77,19 +85,22 @@ st.markdown(f"""
     .stExpander {{
         background: rgba(40, 30, 20, 0.5) !important; border: 1px solid #b8860b !important;
         border-radius: 12px !important; border-left: 12px solid #b8860b !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 15px !important;
     }}
 
-    .day-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 12px; }}
-    .day-item {{ text-align: center; font-weight: 900; border-radius: 12px; padding: 10px 5px; color: white; min-height: 85px; }}
+    .day-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }}
+    .day-item {{ text-align: center; font-weight: 900; border-radius: 12px; padding: 12px 5px; color: white; min-height: 85px; }}
     
     .status-n {{ background: linear-gradient(135deg, #15803d, #166534); border: 1px solid #22c55e; }}
     .status-htc {{ background: linear-gradient(135deg, #b45309, #92400e); border: 1px solid #fbbf24; }}
     .status-hc {{ background: linear-gradient(135deg, #1d4ed8, #1e40af); border: 1px solid #60a5fa; }}
     .status-b {{ background: linear-gradient(135deg, #991b1b, #7f1d1d); border: 1px solid #f87171; }}
 
-    .highlight-active {{ box-shadow: 0 0 25px #ffd700 !important; transform: scale(1.08); border: 2px solid white !important; }}
-    
+    /* KISALTMA REHBERİ TASARIMI (STATİK) */
+    .legend-box {{ font-size: 13px; line-height: 1.6; color: #ddd; padding: 10px; }}
+    .legend-item {{ display: flex; align-items: center; margin-bottom: 4px; }}
+    .legend-tag {{ font-weight: 900; color: #ffd700; min-width: 40px; }}
+
     .mert-signature {{
         position: fixed; bottom: 12px; left: 15px; font-size: 14px; font-weight: 900;
         color: white; opacity: 0.7; letter-spacing: 2px; z-index: 1000;
@@ -99,7 +110,6 @@ st.markdown(f"""
         .user-header {{ font-size: 26px; }}
         .user-sub {{ font-size: 16px; }}
         #live-clock {{ font-size: 16px; }}
-        .day-item {{ min-height: 75px; }}
     }}
     </style>
 
@@ -128,6 +138,7 @@ st.markdown(f"""
 def load_data():
     try:
         df = pd.read_excel("veri.xlsx")
+        # Sütun isimlerini stringe çevir ve temizle
         df.columns = [str(c).strip() for c in df.columns]
         return df
     except: return None
@@ -144,6 +155,7 @@ if not st.session_state['logged_in']:
     sifre = st.text_input(L['pass'], type="password")
     if st.button(L['login']):
         if df is not None:
+            # Excel'deki sicil ve şifre ile kontrol
             res = df[(df['FİORİ NO'].astype(str) == sicil) & (df['DOĞUM YILI'].astype(str) == sifre)]
             if not res.empty: st.session_state['user_data'] = res; st.session_state['logged_in'] = True; st.rerun()
             else: st.error("❌ Bilgiler Hatalı!")
@@ -173,14 +185,15 @@ else:
     with c3: st.metric(L['total_over'], row_s.get("TOPLAM", 0))
 
     st.write("---")
-    st.write(f"### ℹ️ {L['legend']}")
-    cols_leg = st.columns(4)
-    for idx, (k, v) in enumerate(STATUS_MAP.items()):
-        with cols_leg[idx % 4]:
-            if st.button(k, help=v, use_container_width=True):
-                st.session_state['filter_status'] = None if st.session_state['filter_status'] == k else k
+    
+    # 📑 KISALTMA REHBERİ (STATİK - BİLGİ AMAÇLI)
+    with st.expander(f"ℹ️ {L['legend']}"):
+        st.markdown('<div class="legend-box">', unsafe_allow_html=True)
+        for k, v in STATUS_MAP.items():
+            st.markdown(f'<div class="legend-item"><span class="legend-tag">{k}:</span> {v}</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # TARİH ANALİZİ VE TAKVİM OLUŞTURMA
+    # 🗓️ DİNAMİK TARİH VE TAKVİM
     t_cols = [c for c in df.columns if '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
     for h_no, i in enumerate(range(0, len(t_cols), 7), 1):
         hafta = t_cols[i:i+7]
@@ -189,23 +202,21 @@ else:
             for t_col in hafta:
                 durum = str(row_g[t_col]).strip().upper()
                 mesai = str(row_s[t_col]).strip()
-                high_cls = "highlight-active" if st.session_state['filter_status'] == durum else ""
                 
-                # MİLİMETRİK TARİH ANALİZİ: Sütun başlığından gün, ay ve günü al
+                # MİLİMETRİK TARİH MOTORU (Excel'deki sütun ismine göre)
                 try:
-                    # Excel'deki format ne olursa olsun (01.03.2026 gibi) tarihe çeviriyoruz
+                    # Excel'deki 01.03.2026 formatını dayfirst=True ile net bir şekilde çözüyoruz
                     dt = pd.to_datetime(t_col, dayfirst=True)
-                    month_name = AYLAR_TR[dt.month] # Excel'deki ay numarasını isme çevirir
-                    day_label = f"{dt.day:02d} {month_name}"
-                    weekday_label = GUNLER_TR[dt.weekday()]
+                    m_name = AYLAR_TR[dt.month]
+                    day_label = f"{dt.day:02d} {m_name}"
+                    g_adi = GUNLER_TR[dt.weekday()]
                 except:
-                    day_label = str(t_col); weekday_label = ""
+                    day_label = str(t_col); g_adi = ""
 
                 cls = "status-n" if "N" in durum else "status-htc" if "HT" in durum else "status-hc" if "HÇ" in durum else "status-b"
                 mesai_html = f'<div style="background:#facc15; color:black; font-size:11px; padding:2px; border-radius:4px; margin-top:4px; font-weight:bold;">+{mesai}S</div>' if mesai not in ["0", "0.0", "nan", ""] else ""
                 
-                # Her kutucuğun altına o sütunun gerçek gününü ve gerçek ay ismini yazıyoruz
-                st.markdown(f'<div class="day-item {cls} {high_cls}">{durum}<br><span style="font-size:10px; font-weight:800;">{day_label}</span><br><span style="font-size:9px; opacity:0.8;">{weekday_label}</span>{mesai_html}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="day-item {cls}">{durum}<br><span style="font-size:10px; font-weight:800;">{day_label}</span><br><span style="font-size:9px; opacity:0.8;">{g_adi}</span>{mesai_html}</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
     # İtiraz Paneli
