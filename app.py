@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ
+# 2. DİL VE VERİ SÖZLÜĞÜ (BAŞLIKLAR TEMİZLENDİ)
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler",
@@ -49,6 +49,7 @@ STATUS_MAP = {
 AYLAR_TR = {1: "OCAK", 2: "ŞUBAT", 3: "MART", 4: "NİSAN", 5: "MAYIS", 6: "HAZİRAN", 7: "TEMMUZ", 8: "AĞUSTOS", 9: "EYLÜL", 10: "EKİM", 11: "KASIM", 12: "ARALIK"}
 GUNLER_TR = ["PZT", "SALI", "ÇAR", "PER", "CUMA", "CMT", "PAZ"]
 
+# SADECE EN LÜKS VE UYUMLU TEMALAR
 THEMES = {
     "Kurumsal Koyu": {
         "bg_grad_1": "#111827", "bg_grad_2": "#1e293b", "card_bg": "rgba(255,255,255,0.08)",
@@ -95,10 +96,15 @@ st.markdown(f"""
     }}
     .block-container {{ padding-top: 1rem !important; padding-bottom: 2rem !important; max-width: 920px !important; }}
     
+    /* YUKARIDAKI CANLI SAAT TASARIMI (GARANTİLİ) */
+    #live-clock-container {{
+        width: 100%; text-align: right; padding-bottom: 10px; margin-top: -10px;
+    }}
     #live-clock {{ 
-        text-align: right; color: {T["clock"]}; font-family: 'Courier New', monospace; 
-        font-weight: 900; font-size: 22px; letter-spacing: 1.5px; padding-bottom: 15px; 
-        text-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+        color: {T["clock"]}; font-family: 'Courier New', monospace; 
+        font-weight: 900; font-size: 20px; letter-spacing: 2px;
+        text-shadow: 0 2px 5px rgba(0,0,0,0.3); display: inline-block;
+        background: rgba(0,0,0,0.15); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
     }}
     
     .portal-title {{ text-align: center; color: {T["text_main"]}; letter-spacing: 3px; font-weight: 900; margin-bottom: 12px; }}
@@ -118,6 +124,8 @@ st.markdown(f"""
     summary {{ color: {T["text_main"]} !important; font-weight: 800 !important; }}
     
     .day-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 12px; margin-top: 10px; }}
+    
+    /* GÜNLERİN KUTUCUKLARI (Yazılar her zaman beyaz kalsın diye important ekledim) */
     .day-item {{ text-align: center; font-weight: 900; border-radius: 14px; padding: 12px 6px; color: white !important; min-height: 95px; box-shadow: 0 8px 16px rgba(0,0,0,0.18); transition: transform 0.15s ease, box-shadow 0.15s ease; }}
     .day-item:hover {{ transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,0,0,0.22); }}
     
@@ -137,8 +145,13 @@ st.markdown(f"""
     .mert-signature {{ position: fixed; bottom: 12px; left: 15px; font-size: 13px; font-weight: 900; color: {T["text_soft"]}; opacity: 0.8; letter-spacing: 2px; z-index: 1000; }}
     @media (max-width: 600px) {{ .user-header {{ font-size: 25px; }} #live-clock {{ font-size: 16px; }} .day-grid {{ grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 10px; }} .day-item {{ min-height: 88px; font-size: 13px; }} }}
     </style>
-    
-    <div id="live-clock">{clock_init}</div>
+""", unsafe_allow_html=True)
+
+# 🚀 SAATİ EKRANA ÇAKAN HTML/JS KODU
+st.markdown(f"""
+    <div id="live-clock-container">
+        <div id="live-clock">{clock_init}</div>
+    </div>
     <script>
     function updateClock() {{
         const el = document.getElementById('live-clock');
@@ -157,7 +170,7 @@ st.markdown(f"""
     </script>
 """, unsafe_allow_html=True)
 
-# 4. VERİ MOTORU VE ÇELİK TARİH ÇÖZÜCÜ
+# 4. VERİ MOTORU VE 🚀 SIFIR HATA TARİH MOTORU
 @st.cache_data
 def load_data():
     try:
@@ -168,18 +181,29 @@ def load_data():
         return None
 
 def filyos_date_engine(t_col):
-    """Exceldeki metni ZORLA Gün-Ay-Yıl olarak parçalar. Şaşmaz."""
+    """Exceldeki verinin formatını kendi gözüyle okur, Pandas'ın yalanlarına kanmaz."""
     try:
-        clean_str = str(t_col).split(' ')[0]
-        if '.' in clean_str:
-            parts = clean_str.split('.')
-            if len(parts) >= 2:
-                gun = int(parts[0])
-                ay_num = int(parts[1])
-                yil = int(parts[2]) if len(parts) >= 3 else 2026
-                dt_obj = datetime(yil, ay_num, gun)
-                return dt_obj, f"{str(gun).zfill(2)} {AYLAR_TR[ay_num]}", GUNLER_TR[dt_obj.weekday()]
+        clean_str = str(t_col).split(' ')[0] # Örn: '2026-03-01' veya '01.03.2026'
         
+        # 1. Eğer içinde TİRE (-) varsa: Bu kesinlikle YIL-AY-GÜN formatıdır (2026-03-01)
+        if '-' in clean_str:
+            parts = clean_str.split('-')
+            yil = int(parts[0])
+            ay_num = int(parts[1])
+            gun = int(parts[2])
+            dt_obj = datetime(yil, ay_num, gun)
+            return dt_obj, f"{str(gun).zfill(2)} {AYLAR_TR[ay_num]}", GUNLER_TR[dt_obj.weekday()]
+            
+        # 2. Eğer içinde NOKTA (.) varsa: Bu kesinlikle GÜN.AY.YIL formatıdır (01.03.2026)
+        elif '.' in clean_str:
+            parts = clean_str.split('.')
+            gun = int(parts[0])
+            ay_num = int(parts[1])
+            yil = int(parts[2]) if len(parts) >= 3 else now_tr.year
+            dt_obj = datetime(yil, ay_num, gun)
+            return dt_obj, f"{str(gun).zfill(2)} {AYLAR_TR[ay_num]}", GUNLER_TR[dt_obj.weekday()]
+            
+        # 3. İkisi de yoksa güvenli modda parçala
         dt_obj = pd.to_datetime(clean_str, dayfirst=True)
         return dt_obj, f"{str(dt_obj.day).zfill(2)} {AYLAR_TR[dt_obj.month]}", GUNLER_TR[dt_obj.weekday()]
     except:
@@ -255,15 +279,14 @@ else:
         st.success(f"✅ {L['shift_end']}")
 
     # ========================================================
-    # 🚀 %100 ADALET MOTORU: SADECE GÖRÜNEN MESAİLERİ TOPLA!
-    # Excel'in TOPLAM sütununa körüz, tamamen sildim! 
+    # 🚀 ADALET MOTORU (EKRANDA NE GÖRÜNÜYORSA ONU TOPLAR)
     # ========================================================
     t_cols = [c for c in df.columns if '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
     calc_total = 0
     
     for t_col in t_cols:
         dt_obj, _, _ = filyos_date_engine(t_col)
-        # Şubat ayının mesaileri EKRANDA GİZLİ olduğu için, HESABA DA KATILMIYOR!
+        # Şubat ayı gizlendiği için hesaba katılmaz!
         is_february = (dt_obj is not None and dt_obj.month == 2)
         m_val = str(row_s.get(t_col, "")).strip()
         
@@ -289,7 +312,8 @@ else:
 
     for h_no, i in enumerate(range(0, len(t_cols), 7), 1):
         hafta = t_cols[i:i+7]
-        with st.expander(f"📁 {L['week']} {h_no} {L['week_suffix']}"):
+        # BAŞLIK ÇİFTLEMESİ DÜZELTİLDİ: "📁 PUANTAJ DURUM TAKVİMİ - HAFTA 1"
+        with st.expander(f"📁 {L['week_suffix']} - {L['week']} {h_no}"):
             st.markdown('<div class="day-grid">', unsafe_allow_html=True)
             for t_col in hafta:
                 durum = str(row_g.get(t_col, "")).strip().upper()
@@ -298,7 +322,7 @@ else:
                 dt_obj, day_label, g_adi = filyos_date_engine(t_col)
                 cls = get_status_class(durum)
 
-                # ŞUBAT AYI MESAI GIZLEME
+                # ŞUBAT AYI MESAI GIZLEME MANTIĞI & TEMİZ ETİKET
                 is_february = (dt_obj is not None and dt_obj.month == 2)
                 mesai_html = ""
                 if not is_february and mesai not in ["0", "0.0", "nan", "", "None"]:
