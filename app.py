@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ (RESMİ BİLGİLENDİRME VE ÇIKIŞ BUTONU)
+# 2. DİL VE VERİ SÖZLÜĞÜ (KEYERROR HATASI DÜZELTİLDİ)
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler",
@@ -19,7 +19,7 @@ LANGS = {
         "theme": "Tema Seçimi", "month_title": "PUANTAJI", "overtime": "SAAT",
         "logout": "ÇIKIŞ YAP", 
         "sys_note_title": "📌 SİSTEM BİLGİLENDİRMESİ", 
-        "sys_note_text": "Sisteme 22 Mart tarihine kadar olan puantaj ve mesai kayıtları işlenmiştir. Takip eden günlerin veri girişi devam etmektedir."
+        "update_info": "Sisteme 22 Mart tarihine kadar olan puantaj ve mesai kayıtları işlenmiştir. Takip eden günlerin veri girişi devam etmektedir."
     },
     "EN": {
         "title": "FILYOS PHASE-2", "welcome_morning": "Good Morning", "welcome_day": "Good Day",
@@ -32,7 +32,7 @@ LANGS = {
         "theme": "Theme", "month_title": "PAYROLL", "overtime": "HRS",
         "logout": "LOGOUT", 
         "sys_note_title": "📌 SYSTEM NOTICE", 
-        "sys_note_text": "Payroll and overtime records up to March 22 have been entered into the system. Data entry for subsequent days is ongoing."
+        "update_info": "Payroll and overtime records up to March 22 have been entered into the system. Data entry for subsequent days is ongoing."
     },
     "UZ": {
         "title": "FİLYOS FAZ-2", "welcome_morning": "Xayrli tong", "welcome_day": "Xayrli kun",
@@ -45,7 +45,7 @@ LANGS = {
         "theme": "Mavzu", "month_title": "PUANTAJI", "overtime": "SOAT",
         "logout": "CHIQISH", 
         "sys_note_title": "📌 TIZIM MA'LUMOTI", 
-        "sys_note_text": "Tizimga 22-martgacha bo'lgan ish vaqti va qo'shimcha soatlar kiritilgan. Keyingi kunlar uchun ma'lumotlarni kiritish davom etmoqda."
+        "update_info": "Tizimga 22-martgacha bo'lgan ish vaqti va qo'shimcha soatlar kiritilgan. Keyingi kunlar uchun ma'lumotlarni kiritish davom etmoqda."
     }
 }
 
@@ -151,19 +151,9 @@ st.markdown(f"""
     
     .stTextInput > div > div > input, .stTextArea textarea, .stSelectbox > div > div {{ background: {T["input_bg"]} !important; color: {T["input_text"]} !important; border: 1px solid {T["card_border"]} !important; border-radius: 12px !important; }}
     .stTextInput label, .stTextArea label, .stSelectbox label {{ color: {T["text_soft"]} !important; font-weight: 700 !important; }}
-    
-    /* GÖNDER BUTONU VE ÇIKIŞ BUTONU TASARIMI */
     .stButton > button, .stLinkButton > a {{ width: 100%; border-radius: 12px !important; border: none !important; font-weight: 800 !important; min-height: 46px; background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}) !important; color: #ffffff !important; box-shadow: 0 10px 22px rgba(0,0,0,0.18); }}
     
-    /* ÖNEMLİ BİLGİ PANOSU */
-    .info-banner {{
-        background-color: rgba(234, 179, 8, 0.15);
-        border-left: 6px solid #eab308;
-        padding: 16px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }}
+    .info-banner {{ background-color: rgba(234, 179, 8, 0.15); border-left: 6px solid #eab308; padding: 16px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
     .info-title {{ margin: 0; color: #eab308; font-size: 16px; font-weight: 900; letter-spacing: 1px; }}
     .info-text {{ margin: 6px 0 0 0; font-size: 14px; font-weight: 600; color: {T["text_main"]}; opacity: 0.9; }}
 
@@ -190,7 +180,7 @@ st.markdown(f"""
     </script>
 """, unsafe_allow_html=True)
 
-# 4. VERİ MOTORU VE YENİ YAPAY ZEKA TARİH DÜZELTİCİSİ
+# 4. VERİ MOTORU VE YENİ SIFIR HATA TARİH MOTORU
 @st.cache_data
 def load_data():
     try:
@@ -199,6 +189,47 @@ def load_data():
         return df
     except:
         return None
+
+def parse_date_super_safe(t_col, last_date=None):
+    """Excelden gelen veriyi (string veya datetime objesi) şaşmaz şekilde okur."""
+    # 1. Eğer veri doğrudan datetime objesiyse (00:00:00 hatasının sebebi buydu)
+    if isinstance(t_col, (datetime, pd.Timestamp)):
+        dt_obj = datetime(t_col.year, t_col.month, t_col.day)
+    else:
+        # 2. Eğer veri metinse
+        clean_str = str(t_col).split(' ')[0]
+        dt_obj = None
+        if '.' in clean_str:
+            parts = clean_str.split('.')
+            if len(parts) >= 2:
+                try:
+                    yil = int(parts[2]) if len(parts) >= 3 else 2026
+                    dt_obj = datetime(yil, int(parts[1]), int(parts[0]))
+                except: pass
+        elif '-' in clean_str:
+            parts = clean_str.split('-')
+            if len(parts) == 3:
+                try:
+                    if len(parts[0]) == 4: # Format YYYY-MM-DD
+                        dt_obj = datetime(int(parts[0]), int(parts[1]), int(parts[2]))
+                    else: # Format DD-MM-YYYY
+                        dt_obj = datetime(int(parts[2]), int(parts[1]), int(parts[0]))
+                except: pass
+        
+        # 3. Son çare Pandas'a sor
+        if dt_obj is None:
+            try:
+                ts = pd.to_datetime(clean_str, dayfirst=True)
+                dt_obj = datetime(ts.year, ts.month, ts.day)
+            except: pass
+    
+    # KRONOLOJİ DÜZELTİCİSİ (Zaman Geriye Akmaz!)
+    if dt_obj and last_date and dt_obj < last_date:
+        try:
+            dt_obj = datetime(dt_obj.year, dt_obj.day, dt_obj.month)
+        except: pass
+    
+    return dt_obj
 
 def get_status_class(durum):
     durum = str(durum).strip().upper()
@@ -244,7 +275,6 @@ if not st.session_state['logged_in']:
 else:
     u_df = st.session_state['user_data']
 
-    # Üst Menü: Dil, Tema ve ÇIKIŞ Butonu
     ust1, ust2, ust3 = st.columns([1, 1, 1])
     with ust1:
         yeni_dil = st.selectbox(L['lang'], ["TR", "EN", "UZ"], index=["TR", "EN", "UZ"].index(st.session_state['lang']), key="top_lang", label_visibility="collapsed")
@@ -265,7 +295,7 @@ else:
     hour_greet = now_tr.hour
     greet_txt = L["welcome_morning"] if 5 <= hour_greet < 12 else L["welcome_day"] if 12 <= hour_greet < 18 else L["welcome_evening"] if 18 <= hour_greet < 23 else L["welcome_night"]
 
-    st.write("") # Boşluk
+    st.write("")
     st.markdown(f'<div class="user-header">{greet_txt}, {row_g["AD SOYAD"]} 👷‍♂️</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="user-sub">{row_g["GÖREVİ"]} | {row_g["FİORİ NO"]}</div>', unsafe_allow_html=True)
     
@@ -284,37 +314,17 @@ else:
         st.success(f"✅ {L['shift_end']}")
 
     # ========================================================
-    # 🚀 KRONOLOJİK TARİH MOTORU (EXCEL BUG'INI YOK EDER)
+    # 🚀 TARİH MOTORU (SÜPER GÜVENLİ)
     # ========================================================
-    t_cols = [c for c in df.columns if '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
+    t_cols = [c for c in df.columns if isinstance(c, (datetime, pd.Timestamp)) or '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
     
     date_mapping = {}
     last_date = None
     
     for t_col in t_cols:
-        clean_str = str(t_col).split(' ')[0]
-        dt_obj = None
-        
-        if '.' in clean_str:
-            parts = clean_str.split('.')
-            if len(parts) >= 2:
-                try:
-                    dt_obj = datetime(int(parts[2]) if len(parts)>=3 else now_tr.year, int(parts[1]), int(parts[0]))
-                except: pass
-        
-        if dt_obj is None:
-            try:
-                ts = pd.to_datetime(clean_str, dayfirst=True)
-                dt_obj = datetime(ts.year, ts.month, ts.day)
-            except: pass
-
+        dt_obj = parse_date_super_safe(t_col, last_date)
         if dt_obj:
-            if last_date and dt_obj < last_date:
-                try:
-                    dt_obj = datetime(dt_obj.year, dt_obj.day, dt_obj.month)
-                except: pass
             last_date = dt_obj
-            
         date_mapping[t_col] = dt_obj
 
     # SADECE GÖRÜNEN MESAİLERİ TOPLA (ŞUBAT HARİÇ)
@@ -357,13 +367,12 @@ else:
                     g_adi = GUNLER_TR[dt_obj.weekday()]
                     is_february = (dt_obj.month == 2)
                 else:
-                    day_label = str(t_col)
+                    day_label = str(t_col).split(' ')[0]
                     g_adi = ""
                     is_february = False
 
                 cls = get_status_class(durum)
 
-                # ŞUBAT GİZLEME VE COMPACT MESAİ ETİKETİ
                 mesai_html = ""
                 if not is_february and mesai not in ["0", "0.0", "nan", "", "None"]:
                     mesai_html = f'<div style="background:#facc15; color:black; font-size:12px; padding:2px 8px; border-radius:6px; margin-top:2px; font-weight:900; box-shadow:0 2px 4px rgba(0,0,0,0.3);">⚡ {mesai} {L["overtime"]}</div>'
