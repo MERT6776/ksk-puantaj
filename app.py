@@ -6,19 +6,19 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ
+# 2. DİL VE VERİ SÖZLÜĞÜ (FİORİ -> KULLANICI ADI)
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler", 
-        "welcome_evening": "İyi Akşamlar", "welcome_night": "İyi Geceler", "sicil": "FİORİ NO", "pass": "DOĞUM YILI", 
+        "welcome_evening": "İyi Akşamlar", "welcome_night": "İyi Geceler", "sicil": "KULLANICI ADI", "pass": "DOĞUM YILI", 
         "login": "GİRİŞ YAP", "paid_days": "Ödenecek Gün", "phys_days": "Fiziki Gün", "total_over": "TOPLAM MESAİ",
         "week": "PUANTAJ DURUM TAKVİMİ - HAFTA", "appeal_head": "İtiraz Merkezi", "appeal_topic": "Konu Seçiniz...", 
         "appeal_days": "Gün Seçiniz...", "send": "ALİCAN BAYAT'A GÖNDER", "lang": "Dil Seçimi", 
         "note": "Ek Notunuz", "legend": "Kısaltma Rehberi (Filtrelemek İçin Tıklayın)",
         "audit": "Veri Kaynağı: Mert DÜZCÜK Onaylı Sistem", "update": "Son Güncelleme"
     },
-    "EN": {"title": "FILYOS PHASE-2", "welcome_morning": "Good Morning", "welcome_day": "Good Day", "welcome_evening": "Good Evening", "welcome_night": "Good Night", "sicil": "STAFF NO", "pass": "BIRTH YEAR", "login": "LOGIN", "paid_days": "Paid Days", "phys_days": "Physical Days", "total_over": "TOTAL OVERTIME", "week": "TIMESHEET STATUS - WEEK", "appeal_head": "Appeal Center", "appeal_topic": "Topic...", "appeal_days": "Days...", "send": "SEND", "lang": "Language", "note": "Note", "legend": "Legend", "audit": "Source: Mert DÜZCÜK Approved", "update": "Update"},
-    "UZ": {"title": "FİLYOS FAZ-2", "welcome_morning": "Xayrli tong", "welcome_day": "Xayrli kun", "welcome_evening": "Xayrli kech", "welcome_night": "Xayrli tun", "sicil": "XODIM NO", "pass": "TUG'ILGAN YILI", "login": "KIRISH", "paid_days": "To'lanadigan Kun", "phys_days": "Ishlagan Kun", "total_over": "UMUMIY ISH VAQTI", "week": "PUANTAJ HAFTA", "appeal_head": "E'tiroz Markazi", "appeal_topic": "Mavzu...", "appeal_days": "Kunlar...", "send": "YUBORISH", "lang": "Til", "note": "Eslatma", "legend": "Qisqartmalar", "audit": "Tasdiqlangan: Mert DÜZCÜK", "update": "Yangilanish"}
+    "EN": {"title": "FILYOS PHASE-2", "welcome_morning": "Good Morning", "welcome_day": "Good Day", "welcome_evening": "Good Evening", "welcome_night": "Good Night", "sicil": "USERNAME", "pass": "BIRTH YEAR", "login": "LOGIN", "paid_days": "Paid Days", "phys_days": "Physical Days", "total_over": "TOTAL OVERTIME", "week": "STATUS - WEEK", "appeal_head": "Appeal Center", "appeal_topic": "Topic...", "appeal_days": "Days...", "send": "SEND", "lang": "Language", "note": "Note", "legend": "Legend", "audit": "Source: Mert DÜZCÜK Approved", "update": "Update"},
+    "UZ": {"title": "FİLYOS FAZ-2", "welcome_morning": "Xayrli tong", "welcome_day": "Xayrli kun", "welcome_evening": "Xayrli kech", "welcome_night": "Xayrli tun", "sicil": "FOYDALANUVCHI NOMI", "pass": "TUG'ILGAN YILI", "login": "KIRISH", "paid_days": "To'lanadigan Kun", "phys_days": "Ishlagan Kun", "total_over": "UMUMIY ISH VAQTI", "week": "HAFTA PUANTAJI", "appeal_head": "E'tiroz Markazi", "appeal_topic": "Mavzu...", "appeal_days": "Kunlar...", "send": "YUBORISH", "lang": "Til", "note": "Eslatma", "legend": "Qisqartmalar", "audit": "Tasdiqlangan: Mert DÜZCÜK", "update": "Yangilanish"}
 }
 
 STATUS_MAP = {"HTÇ": "Şirkete Fazladan Pazar Çalışması", "HÇ": "Kendine Fazladan Pazar Çalışması", "HT": "Hafta Tatili (Gün Kesilmez)", "Üİ": "Personel Çalışmadı (Gün Kesilir)", "N": "Normal Çalışma", "B": "Bayram Tatili (Gün Kesilmez)", "BÇ": "Bayramda Çalışma"}
@@ -29,7 +29,7 @@ if 'lang' not in st.session_state: st.session_state['lang'] = "TR"
 if 'filter_status' not in st.session_state: st.session_state['filter_status'] = None
 L = LANGS[st.session_state['lang']]
 
-# 3. EXECUTIVE CSS & JS (CANLI SAAT VE ZARİF İMZA)
+# 3. EXECUTIVE CSS & JS (GÜÇLÜ CANLI SAAT VE ZARİF İMZA)
 st.markdown(f"""
     <style>
     .stApp {{ background: transparent !important; }}
@@ -42,10 +42,11 @@ st.markdown(f"""
         background: rgba(5, 10, 20, 0.85); z-index: -1; backdrop-filter: brightness(1.1) saturate(1.4);
     }}
 
-    /* CANLI SAAT TASARIMI */
+    /* CANLI SAAT TASARIMI - GOLD & DIGITAL */
     .clock-container {{
-        text-align: right; color: #ffd700; font-family: 'Courier New', monospace;
+        text-align: right; color: #ffd700; font-family: 'Courier New', Courier, monospace;
         font-weight: 900; font-size: 16px; letter-spacing: 2px; margin-bottom: 10px;
+        text-shadow: 1px 1px 2px black;
     }}
 
     .glass-card {{
@@ -68,9 +69,9 @@ st.markdown(f"""
     .status-b {{ background: linear-gradient(135deg, #991b1b, #7f1d1d); border: 1px solid #f87171; }}
     .status-old {{ background: rgba(71, 85, 105, 0.6); border: 1px solid #94a3b8; }}
 
-    .highlight-active {{ box-shadow: 0 0 20px #ffd700 !important; transform: scale(1.08); border: 2px solid white !important; }}
+    .highlight-active {{ box-shadow: 0 0 25px #ffd700 !important; transform: scale(1.08); border: 2px solid white !important; }}
     
-    /* ✒️ POWERED BY MERT DÜZCÜK - KÜÇÜK VE ZARİF */
+    /* ✒️ POWERED BY MERT DÜZCÜK - ZARİF VE KÜÇÜK */
     .mert-signature {{
         position: fixed; bottom: 12px; left: 15px; font-size: 13px; font-weight: 900;
         color: white; opacity: 0.7; letter-spacing: 1.5px; z-index: 1000;
@@ -83,15 +84,20 @@ st.markdown(f"""
     }}
     </style>
 
-    <div class="clock-container" id="live-clock">YÜKLENİYOR...</div>
+    <div class="clock-container" id="live-clock">BAĞLANIYOR...</div>
 
     <script>
     function updateClock() {{
         const now = new Date();
-        const options = {{ timeZone: 'Europe/Istanbul', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }};
-        const dateStr = now.toLocaleDateString('tr-TR', {{ timeZone: 'Europe/Istanbul' }});
-        const timeStr = now.toLocaleTimeString('tr-TR', options);
-        document.getElementById('live-clock').innerText = dateStr + " | " + timeStr;
+        const trTime = new Date(now.toLocaleString('en-US', {{ timeZone: 'Europe/Istanbul' }}));
+        const day = String(trTime.getDate()).padStart(2, '0');
+        const month = String(trTime.getMonth() + 1).padStart(2, '0');
+        const year = trTime.getFullYear();
+        const hours = String(trTime.getHours()).padStart(2, '0');
+        const minutes = String(trTime.getMinutes()).padStart(2, '0');
+        const seconds = String(trTime.getSeconds()).padStart(2, '0');
+        
+        document.getElementById('live-clock').innerText = day + "." + month + "." + year + " | " + hours + ":" + minutes + ":" + seconds;
     }}
     setInterval(updateClock, 1000);
     updateClock();
@@ -109,7 +115,7 @@ def load_data():
 
 df = load_data()
 
-# Selamlama Belirleme
+# Selamlama Belirleme (Türkiye Saatini Baz Alır)
 hour = (datetime.utcnow() + timedelta(hours=3)).hour
 if 5 <= hour < 12: greet_key = "welcome_morning"
 elif 12 <= hour < 18: greet_key = "welcome_day"
