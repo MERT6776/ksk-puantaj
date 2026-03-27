@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ
+# 2. DİL VE VERİ SÖZLÜĞÜ (AYLAR VE GÜNLER DİNAMİK)
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler", 
@@ -28,14 +28,14 @@ if 'lang' not in st.session_state: st.session_state['lang'] = "TR"
 if 'filter_status' not in st.session_state: st.session_state['filter_status'] = None
 L = LANGS[st.session_state['lang']]
 
-# Türkiye Saati ve Mesai
+# Türkiye Saati ve Vardiya (08:00 - 18:00)
 now_tr = datetime.utcnow() + timedelta(hours=3)
 clock_init = now_tr.strftime("%d.%m.%Y | %H:%M:%S")
 start_hour, end_hour = 8, 18
 current_hour_decimal = now_tr.hour + now_tr.minute / 60
 shift_pct = max(0, min(100, (current_hour_decimal - start_hour) / (end_hour - start_hour) * 100))
 
-# 3. HIGH-VISIBILITY CSS
+# 3. EXECUTIVE CSS
 st.markdown(f"""
     <style>
     .stApp {{ background: transparent !important; }}
@@ -48,7 +48,6 @@ st.markdown(f"""
         background: rgba(5, 10, 20, 0.9); z-index: -1; backdrop-filter: brightness(1.1) saturate(1.4);
     }}
 
-    /* ÜST SAAT VE TARİH */
     #live-clock {{
         text-align: right; color: #ffd700; font-family: 'Courier New', monospace;
         font-weight: 900; font-size: 22px; letter-spacing: 2px;
@@ -78,10 +77,11 @@ st.markdown(f"""
     .stExpander {{
         background: rgba(40, 30, 20, 0.5) !important; border: 1px solid #b8860b !important;
         border-radius: 12px !important; border-left: 12px solid #b8860b !important;
+        margin-bottom: 10px !important;
     }}
 
     .day-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 12px; }}
-    .day-item {{ text-align: center; font-weight: 900; border-radius: 12px; padding: 12px 5px; color: white; min-height: 65px; }}
+    .day-item {{ text-align: center; font-weight: 900; border-radius: 12px; padding: 10px 5px; color: white; min-height: 85px; }}
     
     .status-n {{ background: linear-gradient(135deg, #15803d, #166534); border: 1px solid #22c55e; }}
     .status-htc {{ background: linear-gradient(135deg, #b45309, #92400e); border: 1px solid #fbbf24; }}
@@ -90,7 +90,6 @@ st.markdown(f"""
 
     .highlight-active {{ box-shadow: 0 0 25px #ffd700 !important; transform: scale(1.08); border: 2px solid white !important; }}
     
-    /* ✒️ POWERED BY MERT DÜZCÜK */
     .mert-signature {{
         position: fixed; bottom: 12px; left: 15px; font-size: 14px; font-weight: 900;
         color: white; opacity: 0.7; letter-spacing: 2px; z-index: 1000;
@@ -100,6 +99,7 @@ st.markdown(f"""
         .user-header {{ font-size: 26px; }}
         .user-sub {{ font-size: 16px; }}
         #live-clock {{ font-size: 16px; }}
+        .day-item {{ min-height: 75px; }}
     }}
     </style>
 
@@ -123,7 +123,7 @@ st.markdown(f"""
     </script>
     """, unsafe_allow_html=True)
 
-# 4. VERİ VE GİRİŞ
+# 4. VERİ MOTORU
 @st.cache_data
 def load_data():
     try:
@@ -180,6 +180,7 @@ else:
             if st.button(k, help=v, use_container_width=True):
                 st.session_state['filter_status'] = None if st.session_state['filter_status'] == k else k
 
+    # TARİH ANALİZİ VE TAKVİM OLUŞTURMA
     t_cols = [c for c in df.columns if '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
     for h_no, i in enumerate(range(0, len(t_cols), 7), 1):
         hafta = t_cols[i:i+7]
@@ -190,18 +191,21 @@ else:
                 mesai = str(row_s[t_col]).strip()
                 high_cls = "highlight-active" if st.session_state['filter_status'] == durum else ""
                 
-                # DİNAMİK TARİH ETİKETİ (Ay ve Gün Değişimini Yakalar)
+                # MİLİMETRİK TARİH ANALİZİ: Sütun başlığından gün, ay ve günü al
                 try:
+                    # Excel'deki format ne olursa olsun (01.03.2026 gibi) tarihe çeviriyoruz
                     dt = pd.to_datetime(t_col, dayfirst=True)
-                    month_label = AYLAR_TR[dt.month]
-                    day_label = f"{dt.day:02d} {month_label}"
-                    g_adi = GUNLER_TR[dt.weekday()]
-                except: day_label = str(t_col); g_adi = ""
+                    month_name = AYLAR_TR[dt.month] # Excel'deki ay numarasını isme çevirir
+                    day_label = f"{dt.day:02d} {month_name}"
+                    weekday_label = GUNLER_TR[dt.weekday()]
+                except:
+                    day_label = str(t_col); weekday_label = ""
 
                 cls = "status-n" if "N" in durum else "status-htc" if "HT" in durum else "status-hc" if "HÇ" in durum else "status-b"
                 mesai_html = f'<div style="background:#facc15; color:black; font-size:11px; padding:2px; border-radius:4px; margin-top:4px; font-weight:bold;">+{mesai}S</div>' if mesai not in ["0", "0.0", "nan", ""] else ""
                 
-                st.markdown(f'<div class="day-item {cls} {high_cls}">{durum}<br><span style="font-size:10px; font-weight:800; opacity:1;">{day_label}</span><br><span style="font-size:9px; opacity:0.8;">{g_adi}</span>{mesai_html}</div>', unsafe_allow_html=True)
+                # Her kutucuğun altına o sütunun gerçek gününü ve gerçek ay ismini yazıyoruz
+                st.markdown(f'<div class="day-item {cls} {high_cls}">{durum}<br><span style="font-size:10px; font-weight:800;">{day_label}</span><br><span style="font-size:9px; opacity:0.8;">{weekday_label}</span>{mesai_html}</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
     # İtiraz Paneli
