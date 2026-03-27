@@ -94,16 +94,19 @@ st.markdown(f"""
         background: {T["overlay"]}; z-index: -1; backdrop-filter: blur(3px);
     }}
     .block-container {{ padding-top: 1rem !important; padding-bottom: 2rem !important; max-width: 920px !important; }}
+    
     #live-clock {{ 
         text-align: right; color: {T["clock"]}; font-family: 'Courier New', monospace; 
         font-weight: 900; font-size: 22px; letter-spacing: 1.5px; padding-bottom: 15px; 
         text-shadow: 0 2px 4px rgba(0,0,0,0.2); 
     }}
+    
     .portal-title {{ text-align: center; color: {T["text_main"]}; letter-spacing: 3px; font-weight: 900; margin-bottom: 12px; }}
     .month-title {{ text-align: center; color: {T["accent"]}; font-size: 18px; font-weight: 800; margin-top: -8px; margin-bottom: 18px; letter-spacing: 1px; }}
     .user-header {{ font-size: 32px; font-weight: 900; color: {T["text_main"]}; margin-bottom: 6px; }}
     .user-sub {{ font-size: 18px; font-weight: 700; color: {T["text_soft"]}; margin-bottom: 18px; }}
     .paydos-label {{ font-size: 18px; font-weight: 800; color: {T["accent_2"]}; margin-top: 8px; text-transform: uppercase; }}
+    
     .glass-card {{ background: {T["card_bg"]}; backdrop-filter: blur(20px); border-radius: 18px; border: 1px solid {T["card_border"]}; padding: 20px; margin-bottom: 20px; color: {T["text_main"]}; box-shadow: {T["shadow"]}; }}
     .shift-container {{ width: 100%; background: rgba(128,128,128,0.2); border-radius: 999px; height: 18px; margin: 14px 0; border: 1px solid {T["card_border"]}; overflow: hidden; }}
     .shift-bar {{ width: {shift_pct}%; height: 100%; background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}); box-shadow: 0 0 20px {T["accent"]}; border-radius: 999px; }}
@@ -252,39 +255,25 @@ else:
         st.success(f"✅ {L['shift_end']}")
 
     # ========================================================
-    # 🚀 KURŞUN GEÇİRMEZ TOPLAM MESAİ HESAPLAYICI (YENİ EKLENDİ)
+    # 🚀 %100 ADALET MOTORU: SADECE GÖRÜNEN MESAİLERİ TOPLA!
+    # Excel'in TOPLAM sütununa körüz, tamamen sildim! 
     # ========================================================
     t_cols = [c for c in df.columns if '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
+    calc_total = 0
     
-    total_overtime_val = 0
-    # Yöntem 1: Excel'deki TOPLAM sütununu ara
-    toplam_sutunlari = [c for c in u_df.columns if 'TOPLAM' in str(c).upper()]
-    if toplam_sutunlari:
-        try:
-            raw_val = row_s[toplam_sutunlari[0]]
-            if pd.notna(raw_val) and str(raw_val).strip() != "":
-                total_overtime_val = float(str(raw_val).replace(',', '.'))
-        except:
-            pass
-
-    # Yöntem 2: TOPLAM sütunu yoksa veya hatalıysa, TAKVİMDEKİ GÜNLERİ TEK TEK TOPLA! (SIFIR HATA)
-    if total_overtime_val == 0:
-        calc_total = 0
-        for t_col in t_cols:
-            dt_obj, _, _ = filyos_date_engine(t_col)
-            # Eğer Şubat mesailerini gizliyorsak, toplama da dahil ETMEYELİM (Sadece Mart ve sonrası görünsün diye)
-            # İsteğe bağlı olarak bunu değiştirebiliriz. Ben Mart sonrası için olanları topluyorum:
-            is_february = (dt_obj is not None and dt_obj.month == 2)
-            
-            m_val = str(row_s.get(t_col, "")).strip()
-            if not is_february and m_val not in ["", "0", "0.0", "nan", "None"]:
-                try:
-                    calc_total += float(m_val.replace(',', '.'))
-                except:
-                    pass
-        total_overtime_val = calc_total
-
-    # Formatlama: Virgülsüz tam sayıysa (18.0) direkt 18 yaz, küsüratlıysa aynen bırak
+    for t_col in t_cols:
+        dt_obj, _, _ = filyos_date_engine(t_col)
+        # Şubat ayının mesaileri EKRANDA GİZLİ olduğu için, HESABA DA KATILMIYOR!
+        is_february = (dt_obj is not None and dt_obj.month == 2)
+        m_val = str(row_s.get(t_col, "")).strip()
+        
+        if not is_february and m_val not in ["", "0", "0.0", "nan", "None"]:
+            try:
+                calc_total += float(m_val.replace(',', '.'))
+            except:
+                pass
+                
+    total_overtime_val = calc_total
     toplam_mesai_gosterim = f"{int(total_overtime_val)}" if total_overtime_val % 1 == 0 else f"{total_overtime_val}"
 
     st.write("")
@@ -309,7 +298,7 @@ else:
                 dt_obj, day_label, g_adi = filyos_date_engine(t_col)
                 cls = get_status_class(durum)
 
-                # ŞUBAT AYI MESAI GIZLEME MANTIĞI & TEMİZ ETİKET (V31 MANTIĞI)
+                # ŞUBAT AYI MESAI GIZLEME
                 is_february = (dt_obj is not None and dt_obj.month == 2)
                 mesai_html = ""
                 if not is_february and mesai not in ["0", "0.0", "nan", "", "None"]:
