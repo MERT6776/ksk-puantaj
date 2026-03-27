@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ (KULLANICI ADI GÜNCELLENDİ)
+# 2. DİL VE VERİ SÖZLÜĞÜ (KULLANICI ADI MÜHÜRLENDİ)
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler", 
@@ -29,7 +29,7 @@ if 'lang' not in st.session_state: st.session_state['lang'] = "TR"
 if 'filter_status' not in st.session_state: st.session_state['filter_status'] = None
 L = LANGS[st.session_state['lang']]
 
-# 3. EXECUTIVE CSS & JS (SAAT FİX VE ZARİF İMZA)
+# 3. SAATİ GARANTİYE ALAN CSS & JS
 st.markdown(f"""
     <style>
     .stApp {{ background: transparent !important; }}
@@ -39,14 +39,14 @@ st.markdown(f"""
     }}
     [data-testid="stAppViewContainer"]::before {{
         content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(5, 10, 20, 0.85); z-index: -1; backdrop-filter: brightness(1.1) saturate(1.4);
+        background: rgba(5, 10, 20, 0.88); z-index: -1; backdrop-filter: brightness(1.1) saturate(1.4);
     }}
 
-    /* CANLI SAAT TASARIMI */
-    .clock-container {{
+    /* GARANTİ SAAT TASARIMI */
+    #live-clock {{
         text-align: right; color: #ffd700; font-family: 'Courier New', monospace;
-        font-weight: 900; font-size: 16px; letter-spacing: 2px; margin-bottom: 10px;
-        text-shadow: 1px 1px 2px black; min-height: 24px;
+        font-weight: 900; font-size: 18px; letter-spacing: 2px;
+        padding: 10px; text-shadow: 2px 2px 4px black;
     }}
 
     .glass-card {{
@@ -57,7 +57,7 @@ st.markdown(f"""
 
     .stExpander {{
         background: rgba(40, 30, 20, 0.4) !important; border: 1px solid #b8860b !important;
-        border-radius: 10px !important; border-left: 6px solid #b8860b !important;
+        border-radius: 10px !important; border-left: 8px solid #b8860b !important;
     }}
 
     .day-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; }}
@@ -79,12 +79,12 @@ st.markdown(f"""
     }}
 
     @media (max-width: 600px) {{
-        .clock-container {{ font-size: 13px; }}
+        #live-clock {{ font-size: 14px; }}
         .mert-signature {{ font-size: 11px; bottom: 8px; left: 10px; }}
     }}
     </style>
 
-    <div class="clock-container" id="live-clock"></div>
+    <div id="live-clock">BAŞLATILIYOR...</div>
 
     <script>
     function updateClock() {{
@@ -92,20 +92,20 @@ st.markdown(f"""
         if(!el) return;
         const now = new Date();
         const trTime = new Date(now.toLocaleString('en-US', {{ timeZone: 'Europe/Istanbul' }}));
-        const day = String(trTime.getDate()).padStart(2, '0');
-        const month = String(trTime.getMonth() + 1).padStart(2, '0');
-        const year = trTime.getFullYear();
-        const hours = String(trTime.getHours()).padStart(2, '0');
-        const minutes = String(trTime.getMinutes()).padStart(2, '0');
-        const seconds = String(trTime.getSeconds()).padStart(2, '0');
-        el.innerText = day + "." + month + "." + year + " | " + hours + ":" + minutes + ":" + seconds;
+        const d = String(trTime.getDate()).padStart(2, '0');
+        const m = String(trTime.getMonth() + 1).padStart(2, '0');
+        const y = trTime.getFullYear();
+        const h = String(trTime.getHours()).padStart(2, '0');
+        const i = String(trTime.getMinutes()).padStart(2, '0');
+        const s = String(trTime.getSeconds()).padStart(2, '0');
+        el.innerHTML = d + "." + m + "." + y + " | " + h + ":" + i + ":" + s;
     }}
     setInterval(updateClock, 1000);
-    updateClock(); // İlk açılışta anında çalıştır
+    setTimeout(updateClock, 100); 
     </script>
     """, unsafe_allow_html=True)
 
-# 4. VERİ MOTORU VE SELAMLAMA MANTIĞI
+# 4. VERİ MOTORU VE SELAMLAMA
 @st.cache_data
 def load_data():
     try:
@@ -116,7 +116,7 @@ def load_data():
 
 df = load_data()
 
-# Selamlama Belirleme (Türkiye Saatini Baz Alır)
+# Selamlama (Türkiye Saatini Baz Alır)
 hour = (datetime.utcnow() + timedelta(hours=3)).hour
 if 5 <= hour < 12: greet_key = "welcome_morning"
 elif 12 <= hour < 18: greet_key = "welcome_day"
@@ -166,7 +166,7 @@ else:
     t_cols = [c for c in df.columns if '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
     for h_no, i in enumerate(range(0, len(t_cols), 7), 1):
         hafta = t_cols[i:i+7]
-        with st.expander(f"📁 {L['week']} {h_no}"):
+        with st.expander(f"📁 {L['week']} {h_no} PUANTAJ DURUM TAKVİMİ"):
             st.markdown('<div class="day-grid">', unsafe_allow_html=True)
             for t_col in hafta:
                 durum = str(row_g[t_col]).strip().upper()
@@ -195,10 +195,10 @@ else:
     notunuz = st.text_area(L['note'])
     if st.button(L['send']):
         msg = f"İTİRAZ: {row_g['AD SOYAD']}\nKonu: {konu}{detay_gunler}\nNot: {notunuz}"
-        st.link_button("GÖNDER", f"https://wa.me/905435314160?text={urllib.parse.quote(msg)}")
+        st.link_button("ALİCAN BEY'E GÖNDER", f"https://wa.me/905435314160?text={urllib.parse.quote(msg)}")
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown(f'<div style="text-align:center; font-size:10px; color:rgba(255,255,255,0.4); margin-top:25px;">{L["audit"]}<br>{L["update"]}: {(datetime.utcnow() + timedelta(hours=3)).strftime("%d.%m.%Y %H:%M")}</div>', unsafe_allow_html=True)
 
-# ✒️ POWERED BY MERT DÜZCÜK - ZARİF VE KÜÇÜK
+# ✒️ POWERED BY MERT DÜZCÜK
 st.markdown('<div class="mert-signature">POWERED BY Mert DÜZCÜK</div>', unsafe_allow_html=True)
