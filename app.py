@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ (KULLANICI ADI VE TEMİZ BAŞLIKLAR)
+# 2. DİL VE VERİ SÖZLÜĞÜ
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler", 
@@ -27,14 +27,14 @@ GUNLER_TR = ["PZT", "SALI", "ÇAR", "PER", "CUMA", "CMT", "PAZ"]
 if 'lang' not in st.session_state: st.session_state['lang'] = "TR"
 L = LANGS[st.session_state['lang']]
 
-# Türkiye Saati ve Mesai
+# Türkiye Saati ve Vardiya
 now_tr = datetime.utcnow() + timedelta(hours=3)
 clock_init = now_tr.strftime("%d.%m.%Y | %H:%M:%S")
 start_hour, end_hour = 8, 18
 curr_decimal = now_tr.hour + now_tr.minute / 60
 shift_pct = max(0, min(100, (curr_decimal - start_hour) / (end_hour - start_hour) * 100))
 
-# 3. EXECUTIVE CSS (TERTEMİZ VE BÜYÜK)
+# 3. EXECUTIVE CSS
 st.markdown(f"""
     <style>
     .stApp {{ background: transparent !important; }}
@@ -68,18 +68,17 @@ st.markdown(f"""
     }}
     .stExpander {{
         background: rgba(40, 30, 20, 0.5) !important; border: 1px solid #b8860b !important;
-        border-radius: 12px !important; border-left: 12px solid #b8860b !important;
+        border-radius: 12px !important; border-left: 10px solid #b8860b !important;
         margin-bottom: 12px !important;
     }}
     .day-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 12px; }}
-    .day-item {{ text-align: center; font-weight: 900; border-radius: 12px; padding: 12px 5px; color: white; min-height: 95px; position: relative; }}
+    .day-item {{ text-align: center; font-weight: 900; border-radius: 12px; padding: 12px 5px; color: white; min-height: 95px; }}
     
     .status-n {{ background: linear-gradient(135deg, #15803d, #166534); border: 1px solid #22c55e; }}
     .status-htc {{ background: linear-gradient(135deg, #b45309, #92400e); border: 1px solid #fbbf24; }}
     .status-hc {{ background: linear-gradient(135deg, #1d4ed8, #1e40af); border: 1px solid #60a5fa; }}
     .status-b {{ background: linear-gradient(135deg, #991b1b, #7f1d1d); border: 1px solid #f87171; }}
 
-    /* MESAI ETIKETI (TEMİZ) */
     .overtime-label {{
         background: rgba(250, 204, 21, 0.2); color: #facc15; font-size: 11px;
         padding: 2px 6px; border-radius: 6px; border: 1px solid rgba(250, 204, 21, 0.4);
@@ -111,7 +110,7 @@ st.markdown(f"""
     </script>
     """, unsafe_allow_html=True)
 
-# 4. VERİ MOTORU VE TARİH ÇÖZÜCÜ
+# 4. VERİ MOTORU
 @st.cache_data
 def load_data():
     try:
@@ -120,25 +119,19 @@ def load_data():
         return df
     except: return None
 
-def filyos_date_fixer(t_col):
-    """Excel'deki tarihleri ve saatleri temizleyip Türkçeleştirir."""
+def filyos_date_engine(t_col):
+    """Tarihleri milimetrik çözer ve ay bilgisini döndürür."""
     try:
-        # Eğer Pandas tarihi Timestamp olarak okuduysa saat kısmını at
         clean_str = str(t_col).split(' ')[0]
-        
-        # Parçala (Nokta veya Tire fark etmeksizin)
         if '.' in clean_str:
             parts = clean_str.split('.')
             dt_obj = datetime(int(parts[2]), int(parts[1]), int(parts[0]))
         else:
             dt_obj = pd.to_datetime(clean_str)
 
-        gun = str(dt_obj.day).zfill(2)
-        ay_isim = AYLAR_TR[dt_obj.month]
-        gun_ismi = GUNLER_TR[dt_obj.weekday()]
-        return f"{gun} {ay_isim}", gun_ismi
+        return dt_obj, f"{str(dt_obj.day).zfill(2)} {AYLAR_TR[dt_obj.month]}", GUNLER_TR[dt_obj.weekday()]
     except:
-        return str(t_col).split(' ')[0], ""
+        return None, str(t_col), ""
 
 df = load_data()
 
@@ -196,12 +189,18 @@ else:
                 durum = str(row_g[t_col]).strip().upper()
                 mesai = str(row_s[t_col]).strip()
                 
-                day_label, g_adi = filyos_date_fixer(t_col)
+                dt_obj, day_label, g_adi = filyos_date_engine(t_col)
 
                 cls = "status-n" if "N" in durum else "status-htc" if "HT" in durum else "status-hc" if "HÇ" in durum else "status-b"
                 
-                # ⚡ MESAI ETIKETI DUZELTME
-                mesai_html = f'<div class="overtime-label">⚡ {mesai} {L["overtime"]}</div>' if mesai not in ["0", "0.0", "nan", "", "0.00"] else ""
+                # 🚀 ŞUBAT AYI MESAI GIZLEME MANTIĞI
+                # Eğer ay Şubat (2) ise mesai etiketini oluşturma
+                is_february = (dt_obj is not None and dt_obj.month == 2)
+                
+                if not is_february and mesai not in ["0", "0.0", "nan", "", "0.00"]:
+                    mesai_html = f'<div class="overtime-label">⚡ {mesai} {L["overtime"]}</div>'
+                else:
+                    mesai_html = ""
                 
                 st.markdown(f'<div class="day-item {cls}">{durum}<br><span style="font-size:10px; font-weight:800;">{day_label}</span><br><span style="font-size:9px; opacity:0.8;">{g_adi}</span>{mesai_html}</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
