@@ -11,271 +11,137 @@ LANG = {
     "TR": {
         "title": "FİLYOS FAZ-2", "subtitle": "DİJİTAL OFİS", "sicil": "FİORİ PERSONEL NO", "sifre": "DOĞUM YILI (Şifre)", 
         "login_btn": "SİSTEME GİRİŞ YAP", "yukleniyor": "Sisteme Bağlanılıyor...", "hata": "❌ Hatalı Bilgi!",
-        "welcome": "Hoş Geldin", "gorev": "Görev", "gun": "GÜN",
+        "welcome": "Hoş Geldin", "gorev": "Görev", "detay_baslik": "🗓️ Günlük Puantaj Detayları",
         "odenecek": "Ödenecek Gün", "fiziki": "Fiziki Çalışılan", "sgk": "SGK Günü",
         "hesap_baslik": "İnteraktif Maaş Metre", "yevmiye": "Günlük Yevmiyeniz (TL)", "tahmini": "Tahmini Hak Ediş",
         "iletisim_baslik": "İK Destek Merkezi", "iletisim_bilgi": "İtiraz konunuzu seçip destek hattına bağlanın.",
         "konu_sec": "Destek Konusu:", "konular": ["Eksik Gün İtirazı", "Mesai Saati İtirazı", "Maaş/Yevmiye Sorunu", "Diğer Konular"],
         "destek_btn": "FAZ-2 İK DESTEK HATTI"
-    },
-    "EN": {
-        "title": "FILYOS PHASE-2", "subtitle": "DIGITAL OFFICE", "sicil": "FIORI ID", "sifre": "BIRTH YEAR", 
-        "login_btn": "LOGIN TO SYSTEM", "yukleniyor": "Connecting...", "hata": "❌ Invalid Info!",
-        "welcome": "Welcome", "gorev": "Role", "gun": "DAYS",
-        "odenecek": "Payable Days", "fiziki": "Physical Days", "sgk": "SGK Days",
-        "hesap_baslik": "Salary Calculator", "yevmiye": "Daily Wage (TL)", "tahmini": "Estimated Pay",
-        "iletisim_baslik": "HR Support", "iletisim_bilgi": "Select issue and connect.",
-        "konu_sec": "Issue:", "konular": ["Missing Days", "Overtime", "Salary", "Other"],
-        "destek_btn": "PHASE-2 HR SUPPORT"
-    },
-    "UZ": {
-        "title": "FILYOS FAZ-2", "subtitle": "RAQAMLI OFIS", "sicil": "FIORI ID", "sifre": "TUG'ILGAN YIL", 
-        "login_btn": "KIRISH", "yukleniyor": "Bog'lanmoqda...", "hata": "❌ Xato Ma'lumot!",
-        "welcome": "Xush Kelibsiz", "gorev": "Lavozim", "gun": "KUN",
-        "odenecek": "To'lanadigan", "fiziki": "Ishlagan", "sgk": "SGK Kunlari",
-        "hesap_baslik": "Maosh Hisoblash", "yevmiye": "Kunlik Ish Haqi", "tahmini": "Taxminiy Maosh",
-        "iletisim_baslik": "Kadrlar Bo'limi", "iletisim_bilgi": "Muammoni tanlang.",
-        "konu_sec": "Muammo:", "konular": ["Kam Kunlar", "Qo'shimcha Ish", "Maosh", "Boshqa"],
-        "destek_btn": "KADRLAR DESTEK HATTI"
     }
 }
 
-# 3. Premium CSS (Dünyanın En Sağlam Arka Planı ve Animasyonları)
+# 3. Premium CSS (Termal Kutular ve Çekmeceler İçin)
 st.markdown("""
     <style>
-    /* Menüleri ve Streamlit'in kendi arka planlarını tamamen yok et */
-    #MainMenu {visibility: hidden;}
-    header {visibility: hidden;}
-    footer {visibility: hidden;}
+    #MainMenu {visibility: hidden;} header {visibility: hidden;} footer {visibility: hidden;}
     [data-testid="collapsedControl"] {display: none;}
-    [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
-        background: transparent !important;
-    }
-    .stApp { background: transparent !important; }
+    [data-testid="stAppViewContainer"], [data-testid="stHeader"] { background: transparent !important; }
     
-    /* 🇹🇷 100% ÇALIŞAN GARANTİLİ BAYRAK (Wikipedia Sunucusu) ve SİNEMATİK HAREKET */
     body::before {
-        content: "";
-        position: fixed;
-        top: -10%; left: -10%; width: 120%; height: 120%;
+        content: ""; position: fixed; top: -10%; left: -10%; width: 120%; height: 120%;
         background-image: url("https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg");
-        background-size: cover;
-        background-position: center;
-        z-index: -2;
+        background-size: cover; background-position: center; z-index: -2;
         animation: droneShot 15s ease-in-out infinite alternate;
     }
-
-    /* Koyu Sinematik Filtre (Bayrağın kırmızısını boğmayan jilet gibi geçiş) */
     body::after {
-        content: "";
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: linear-gradient(180deg, rgba(15,20,30,0.80) 0%, rgba(5,10,15,0.95) 100%);
+        content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: linear-gradient(180deg, rgba(15,20,30,0.85) 0%, rgba(5,10,15,0.95) 100%);
         z-index: -1;
     }
+    @keyframes droneShot { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
 
-    /* Bayrağı ağır ağır hareket ettiren kurgu animasyonu */
-    @keyframes droneShot {
-        0% { transform: scale(1) translate(0, 0); }
-        100% { transform: scale(1.15) translate(-1%, 2%); }
-    }
-
-    /* Kartlar ve Aşağıdan Yukarı Kayma Animasyonu */
     .dark-card {
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 25px;
-        margin-bottom: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        opacity: 0;
-        transform: translateY(30px);
+        background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px);
+        border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 20px; margin-bottom: 15px;
     }
     
-    @keyframes slideUp {
-        to { opacity: 1; transform: translateY(0); }
+    /* Termal Kutucuklar */
+    .day-box {
+        display: inline-block; width: 35px; height: 35px; line-height: 35px;
+        text-align: center; border-radius: 6px; margin: 2px;
+        font-weight: bold; font-size: 12px; color: white;
     }
-
-    /* Mekanik Flipper Rakamları */
+    .status-n { background: #166534; border: 1px solid #22c55e; } /* Normal Gün - Yeşil */
+    .status-htc { background: #92400e; border: 1px solid #f59e0b; } /* Hafta Tatili - Turuncu */
+    .status-hc { background: #1e40af; border: 1px solid #3b82f6; } /* Haftalık Çalışma - Mavi */
+    .status-b { background: #991b1b; border: 1px solid #ef4444; } /* Boş/Devamsız - Kırmızı */
+    
+    .mesai-text { color: #facc15; font-size: 11px; display: block; margin-top: -10px; }
+    
     .flipper-text {
-        font-family: 'Courier New', Courier, monospace;
-        font-size: 34px;
-        font-weight: bold;
-        color: #e2e8f0;
-        background-color: #0f172a;
-        padding: 10px 15px;
-        border-radius: 8px;
-        display: inline-block;
-        border: 2px solid #334155;
-        box-shadow: inset 0 4px 10px rgba(0,0,0,0.8);
-        animation: flipIn 1s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
-    }
-    @keyframes flipIn {
-        0% { transform: rotateX(-90deg); opacity: 0; }
-        100% { transform: rotateX(0deg); opacity: 1; }
-    }
-
-    /* Buton Tasarımları */
-    .stButton>button {
-        width: 100%;
-        border-radius: 8px;
-        background: linear-gradient(90deg, #1e40af 0%, #1d4ed8 100%);
-        color: white;
-        height: 50px;
-        font-size: 16px;
-        font-weight: bold;
-        border: none;
-        transition: 0.3s;
-    }
-    .stButton>button:active { transform: scale(0.97); }
-
-    .stLinkButton>a { 
-        width: 100% !important; 
-        border-radius: 8px !important; 
-        background: linear-gradient(90deg, #166534 0%, #15803d 100%) !important; 
-        color: white !important; 
-        height: 50px !important; 
-        line-height: 35px !important;
-        font-weight: bold !important;
-        text-align: center !important;
-        text-decoration: none !important;
-        display: block !important;
-    }
-    
-    /* Şifre Input Odaklama */
-    .stTextInput>div>div>input {
-        background-color: rgba(0,0,0,0.5) !important;
-        color: white !important;
-        border-radius: 8px !important;
-        border: 1px solid #334155 !important;
-        height: 50px !important;
-        transition: all 0.3s;
-    }
-    .stTextInput>div>div>input:focus {
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 10px rgba(59,130,246,0.5) !important;
-    }
-    .stSelectbox>div>div>div {
-        background-color: rgba(0,0,0,0.5) !important;
-        color: white !important;
-        border-radius: 8px !important;
-        border: 1px solid #334155 !important;
-    }
-    
-    .main-title {
-        text-align: center; font-weight: 900; letter-spacing: 2px; margin-bottom: 0px; color: white;
-    }
-    .sub-title {
-        text-align: center; font-size: 14px; color: #94a3b8; letter-spacing: 4px; margin-bottom: 30px;
+        font-family: monospace; font-size: 30px; font-weight: bold;
+        color: #e2e8f0; background: #0f172a; padding: 5px 10px;
+        border-radius: 8px; border: 1px solid #334155;
     }
     </style>
     """, unsafe_allow_html=True)
 
-if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = False
-if 'user_data' not in st.session_state:
-    st.session_state['user_data'] = None
-
 @st.cache_data
 def load_data():
-    try:
-        return pd.read_excel("veri.xlsx")
-    except:
-        return None
+    try: return pd.read_excel("veri.xlsx")
+    except: return None
 
 df = load_data()
+t = LANG["TR"]
 
-dil_secim = st.selectbox("🌐", ["TR", "EN", "UZ"], label_visibility="collapsed")
-t = LANG[dil_secim]
+if 'logged_in' not in st.session_state: st.session_state['logged_in'] = False
 
-# ----------------- GİRİŞ EKRANI -----------------
+# --- GİRİŞ ---
 if not st.session_state['logged_in']:
-    st.markdown(f"<h1 class='main-title'>{t['title']}</h1>", unsafe_allow_html=True)
-    st.markdown(f"<div class='sub-title'>{t['subtitle']}</div>", unsafe_allow_html=True)
-    
-    st.markdown('<div class="dark-card">', unsafe_allow_html=True)
-    sicil_input = st.text_input(t['sicil'], placeholder="Örn: 533707")
-    sifre_input = st.text_input(t['sifre'], type="password", placeholder="Örn: 1993")
-    st.write(" ")
-    giris_basildi = st.button(t['login_btn'])
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    if giris_basildi:
-        if df is not None:
-            # EXCEL BAŞLIKLARI BİREBİR EŞLEŞTİRİLDİ:
-            sonuc = df[(df['FİORİ NO'].astype(str) == sicil_input) & (df['DOĞUM YILI'].astype(str) == sifre_input)]
-            if not sonuc.empty:
-                ilerleme = st.progress(0, text=t['yukleniyor'])
-                for percent in range(100):
-                    time.sleep(0.01)
-                    ilerleme.progress(percent + 1, text=t['yukleniyor'])
-                
-                ilerleme.empty()
-                st.session_state['user_data'] = sonuc.iloc[0]
+    st.markdown("<h1 style='text-align:center; color:white;'>FİLYOS FAZ-2</h1>", unsafe_allow_html=True)
+    with st.container():
+        st.markdown('<div class="dark-card">', unsafe_allow_html=True)
+        sicil = st.text_input(t['sicil'])
+        sifre = st.text_input(t['sifre'], type="password")
+        if st.button(t['login_btn']):
+            res = df[(df['FİORİ NO'].astype(str) == sicil) & (df['DOĞUM YILI'].astype(str) == sifre)]
+            if not res.empty:
+                st.session_state['user_data'] = res # Tüm satırları al (Gün ve Saat)
                 st.session_state['logged_in'] = True
                 st.rerun()
-            else:
-                st.error(t['hata'])
-                
-# ----------------- ANA EKRAN -----------------
+            else: st.error(t['hata'])
+        st.markdown('</div>', unsafe_allow_html=True)
+
+# --- ANA EKRAN ---
 else:
-    kisi = st.session_state['user_data']
+    user_df = st.session_state['user_data']
+    # Gün ve Saat satırlarını ayır
+    row_gun = user_df[user_df['N-M'].astype(str).str.contains('Gün', na=False, case=False)].iloc[0]
+    row_saat = user_df[user_df['N-M'].astype(str).str.contains('SAAT', na=False, case=False)].iloc[0]
 
-    # GÜVENLİK SİGORTASI: Eğer Excel'de bu sütunlar yoksa sistem çökmesin diye 0 veya boş değer atıyoruz.
-    ad_soyad = kisi.get('AD SOYAD', 'İsim Bulunamadı')
-    gorevi = kisi.get('GÖREVİ', 'Görev Bulunamadı')
-    fiori_no = kisi.get('FİORİ NO', '-')
-    
-    odenecek_gun = kisi.get('Personele Ödenecek Gün', 0)
-    fiziki_gun = kisi.get('Fiziki Çalışılan Gün', 0)
-    sgk_gun = kisi.get('SGK Ödenecek Gün', 0)
+    st.markdown(f'<div class="dark-card"><h3>👋 {t["welcome"]}, {row_gun["AD SOYAD"]}</h3></div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="dark-card" style="animation-delay: 0s;">', unsafe_allow_html=True)
-    st.markdown(f"### 👋 {t['welcome']}, {ad_soyad}")
-    st.caption(f"📂 {gorevi} | Sicil: {fiori_no}")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown('<div class="dark-card" style="animation-delay: 0.1s;">', unsafe_allow_html=True)
+    # Özet Kartları
     c1, c2, c3 = st.columns(3)
-    with c1:
-        st.caption(t['odenecek'])
-        st.markdown(f"<div class='flipper-text'>{odenecek_gun}</div>", unsafe_allow_html=True)
-    with c2:
-        st.caption(t['fiziki'])
-        st.markdown(f"<div class='flipper-text'>{fiziki_gun}</div>", unsafe_allow_html=True)
-    with c3:
-        st.caption(t['sgk'])
-        st.markdown(f"<div class='flipper-text'>{sgk_gun}</div>", unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    c1.metric(t['odenecek'], row_gun.get('Personele Ödenecek Gün', 0))
+    c2.metric(t['fiziki'], row_gun.get('Fiziki Çalışılan Gün', 0))
+    c3.metric(t['sgk'], row_gun.get('SGK Ödenecek Gün', 0))
 
-    st.markdown('<div class="dark-card" style="animation-delay: 0.2s;">', unsafe_allow_html=True)
-    st.markdown(f"#### 🧮 {t['hesap_baslik']}")
+    # --- AKILLI ÇEKMECELER (Netflix Stili) ---
+    st.markdown(f"#### {t['detay_baslik']}")
+    
+    # Tarih sütunlarını bul (23.02.2026 gibi olanlar)
+    tarih_sutunlari = [col for col in df.columns if '.' in str(col) and len(str(col)) > 5]
+    
+    # Haftalık böl (7'şerli)
+    for i in range(0, len(tarih_sutunlari), 7):
+        hafta_cols = tarih_sutunlari[i:i+7]
+        baslangic = hafta_cols[0].split('.')[0] + " " + hafta_cols[0].split('.')[1]
+        bitis = hafta_cols[-1].split('.')[0] + " " + hafta_cols[-1].split('.')[1]
+        
+        with st.expander(f"📅 {baslangic} - {bitis} Haftası Detayı"):
+            cols = st.columns(7)
+            for idx, tarih in enumerate(hafta_cols):
+                with cols[idx]:
+                    durum = str(row_gun[tarih]).upper()
+                    mesai = str(row_saat[tarih]) if not pd.isna(row_saat[tarih]) else ""
+                    
+                    css_class = "status-b"
+                    if "N" in durum: css_class = "status-n"
+                    elif "HTÇ" in durum: css_class = "status-htc"
+                    elif "HÇ" in durum: css_class = "status-hc"
+                    
+                    st.markdown(f'<div class="day-box {css_class}">{durum}</div>', unsafe_allow_html=True)
+                    if mesai and mesai != "0" and mesai != "0.0":
+                        st.markdown(f'<span class="mesai-text">+{mesai}s</span>', unsafe_allow_html=True)
+                    st.caption(tarih.split('.')[0] + "/" + tarih.split('.')[1])
+
+    # Maaş Metre ve Destek (Aynı Kaldı)
+    st.markdown('<div class="dark-card">', unsafe_allow_html=True)
     yevmiye = st.number_input(t['yevmiye'], min_value=0, step=100)
-    
-    # Hesaplama bölümü güvenlik sigortası
-    try:
-        odn_sayi = float(odenecek_gun)
-    except:
-        odn_sayi = 0
-
     if yevmiye > 0:
-        toplam_maas = yevmiye * odn_sayi
-        st.success(f"💸 **{t['tahmini']}:** {toplam_maas:,.2f} ₺")
+        st.success(f"💸 {t['tahmini']}: {yevmiye * float(row_gun.get('Personele Ödenecek Gün', 0)):,.2f} ₺")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="dark-card" style="animation-delay: 0.3s;">', unsafe_allow_html=True)
-    st.markdown(f"#### ☎️ {t['iletisim_baslik']}")
-    st.caption(t['iletisim_bilgi'])
-    
-    itiraz_konusu = st.selectbox(t['konu_sec'], t['konular'])
-    
-    admin_no = "905459157444" 
-    mesaj_metni = f"DİJİTAL OFİS BİLDİRİMİ\nPersonel: {ad_soyad}\nSicil: {fiori_no}\nKonu: {itiraz_konusu}\n\nMert Bey merhaba, yukarıda belirttiğim konu hakkında puantaj kayıtlarımla ilgili kontrol talep ediyorum."
-    encoded_mesaj = urllib.parse.quote(mesaj_metni)
-    wp_link = f"https://wa.me/{admin_no}?text={encoded_mesaj}"
-    
-    st.link_button(f"📲 {t['destek_btn']}", wp_link)
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.link_button(f"📲 {t['destek_btn']}", f"https://wa.me/905459157444")
