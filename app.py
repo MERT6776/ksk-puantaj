@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ (MİLLİ FORMAT)
+# 2. DİL VE VERİ SÖZLÜĞÜ (TAMAMEN DİNAMİK)
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler", 
@@ -20,28 +20,19 @@ LANGS = {
     "UZ": {"title": "FİLYOS FAZ-2", "welcome_morning": "Xayrli tong", "welcome_day": "Xayrli kun", "welcome_evening": "Xayrli kech", "welcome_night": "Xayrli tun", "sicil": "FOYDALANUVCHI NOMI", "pass": "TUG'ILGAN YILI", "login": "KIRISH", "paid_days": "To'lanadigan Kun", "phys_days": "Ishlagan Kun", "total_over": "UMUMIY ISH VAQTI", "week": "HAFTA", "week_suffix": "PUANTAJ JADVALI", "appeal_head": "E'tiroz Markazi", "send": "YUBORISH", "lang": "Til", "note": "Eslatma", "legend": "QISQARTMALAR", "shift_end": "Ish yakunlandi"}
 }
 
-STATUS_MAP = {
-    "HTÇ": "Şirkete Fazladan Pazar Çalışması",
-    "HÇ": "Kendine Fazladan Pazar Çalışması",
-    "HT": "Hafta Tatili (Gün Kesilmez)",
-    "Üİ": "Personel Çalışmadı (Gün Kesilir)",
-    "N": "Normal Çalışma",
-    "B": "Bayram Tatili (Gün Kesilmez)",
-    "BÇ": "Bayramda Çalışma"
-}
-
+STATUS_MAP = {"HTÇ": "Şirkete Fazladan Pazar Çalışması", "HÇ": "Kendine Fazladan Pazar Çalışması", "HT": "Hafta Tatili", "Üİ": "Personel Çalışmadı", "N": "Normal Çalışma", "B": "Bayram Tatili", "BÇ": "Bayramda Çalışma"}
 AYLAR_TR = {1: "OCAK", 2: "ŞUBAT", 3: "MART", 4: "NİSAN", 5: "MAYIS", 6: "HAZİRAN", 7: "TEMMUZ", 8: "AĞUSTOS", 9: "EYLÜL", 10: "EKİM", 11: "KASIM", 12: "ARALIK"}
 GUNLER_TR = ["PZT", "SALI", "ÇAR", "PER", "CUMA", "CMT", "PAZ"]
 
 if 'lang' not in st.session_state: st.session_state['lang'] = "TR"
 L = LANGS[st.session_state['lang']]
 
-# Türkiye Saati ve Vardiya (08:00 - 18:00)
+# Türkiye Saati ve Vardiya
 now_tr = datetime.utcnow() + timedelta(hours=3)
 clock_init = now_tr.strftime("%d.%m.%Y | %H:%M:%S")
 start_hour, end_hour = 8, 18
-current_hour_decimal = now_tr.hour + now_tr.minute / 60
-shift_pct = max(0, min(100, (current_hour_decimal - start_hour) / (end_hour - start_hour) * 100))
+curr_decimal = now_tr.hour + now_tr.minute / 60
+shift_pct = max(0, min(100, (curr_decimal - start_hour) / (end_hour - start_hour) * 100))
 
 # 3. EXECUTIVE CSS
 st.markdown(f"""
@@ -55,63 +46,42 @@ st.markdown(f"""
         content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
         background: rgba(5, 10, 20, 0.9); z-index: -1; backdrop-filter: brightness(1.1) saturate(1.4);
     }}
-
     #live-clock {{
         text-align: right; color: #ffd700; font-family: 'Courier New', monospace;
-        font-weight: 900; font-size: 22px; letter-spacing: 2px;
-        padding: 10px; text-shadow: 2px 2px 5px black;
+        font-weight: 900; font-size: 22px; letter-spacing: 1.5px;
+        padding: 10px; text-shadow: 2px 2px 4px black;
     }}
-
-    .user-header {{ font-size: 34px; font-weight: 900; color: white; margin-bottom: 0px; }}
+    .user-header {{ font-size: 34px; font-weight: 900; color: white; }}
     .user-sub {{ font-size: 20px; font-weight: 700; color: #ffd700; margin-bottom: 20px; }}
     .paydos-label {{ font-size: 20px; font-weight: 800; color: #ffd700; margin-top: 10px; text-transform: uppercase; }}
-
     .shift-container {{
         width: 100%; background: rgba(255, 255, 255, 0.1); border-radius: 12px;
         height: 18px; margin: 15px 0; border: 1px solid rgba(255, 215, 0, 0.4); overflow: hidden;
     }}
-    .shift-bar {{
-        width: {shift_pct}%; height: 100%; 
-        background: linear-gradient(90deg, #b8860b, #ffd700);
-        box-shadow: 0 0 15px #ffd700;
-    }}
-
+    .shift-bar {{ width: {shift_pct}%; height: 100%; background: linear-gradient(90deg, #b8860b, #ffd700); box-shadow: 0 0 15px #ffd700; }}
     .glass-card {{
         background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(25px);
         border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.2);
         padding: 20px; margin-bottom: 20px; color: white;
     }}
-
     .stExpander {{
         background: rgba(40, 30, 20, 0.5) !important; border: 1px solid #b8860b !important;
         border-radius: 12px !important; border-left: 12px solid #b8860b !important;
         margin-bottom: 12px !important;
     }}
-
     .day-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }}
     .day-item {{ text-align: center; font-weight: 900; border-radius: 12px; padding: 12px 5px; color: white; min-height: 85px; }}
-    
     .status-n {{ background: linear-gradient(135deg, #15803d, #166534); border: 1px solid #22c55e; }}
     .status-htc {{ background: linear-gradient(135deg, #b45309, #92400e); border: 1px solid #fbbf24; }}
     .status-hc {{ background: linear-gradient(135deg, #1d4ed8, #1e40af); border: 1px solid #60a5fa; }}
     .status-b {{ background: linear-gradient(135deg, #991b1b, #7f1d1d); border: 1px solid #f87171; }}
-
-    .legend-box {{ font-size: 14px; line-height: 1.8; color: #eee; padding: 10px; }}
-    .legend-tag {{ font-weight: 900; color: #ffd700; margin-right: 10px; }}
-
     .mert-signature {{
         position: fixed; bottom: 12px; left: 15px; font-size: 14px; font-weight: 900;
         color: white; opacity: 0.7; letter-spacing: 2px; z-index: 1000;
     }}
-
-    @media (max-width: 600px) {{
-        .user-header {{ font-size: 26px; }}
-        #live-clock {{ font-size: 16px; }}
-    }}
+    @media (max-width: 600px) {{ .user-header {{ font-size: 26px; }} #live-clock {{ font-size: 16px; }} }}
     </style>
-
     <div id="live-clock">{clock_init}</div>
-
     <script>
     function updateClock() {{
         const el = document.getElementById('live-clock');
@@ -130,13 +100,23 @@ st.markdown(f"""
     </script>
     """, unsafe_allow_html=True)
 
-# 4. VERİ MOTORU
+# 4. VERİ MOTORU VE TARİH AYRIŞTIRICI
 @st.cache_data
 def load_data():
     try:
         df = pd.read_excel("veri.xlsx")
         df.columns = [str(c).strip() for c in df.columns]
         return df
+    except: return None
+
+def parse_filyos_date(date_str):
+    """Excel'deki 01.03.2026 formatını çelik gibi çözer."""
+    try:
+        # Noktalara ayırıp tersten (Yıl, Ay, Gün) tarih objesi yapıyoruz
+        parts = str(date_str).split('.')
+        if len(parts) == 3:
+            return datetime(int(parts[2]), int(parts[1]), int(parts[0]))
+        return pd.to_datetime(date_str, dayfirst=True)
     except: return None
 
 df = load_data()
@@ -156,7 +136,6 @@ if not st.session_state['logged_in']:
             else: st.error("❌ Bilgiler Hatalı!")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- ANA EKRAN ---
 else:
     u_df = st.session_state['user_data']
     row_g = u_df[u_df['N-M'].astype(str).str.contains('Gün', na=False, case=False)].iloc[0]
@@ -168,7 +147,7 @@ else:
     st.markdown(f'<div class="user-header">{greet_txt}, {row_g["AD SOYAD"]} 👷‍♂️</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="user-sub">{row_g["GÖREVİ"]} | {row_g["FİORİ NO"]}</div>', unsafe_allow_html=True)
     
-    if current_hour_decimal < end_hour:
+    if curr_decimal < end_hour:
         st.markdown(f'<div class="shift-container"><div class="shift-bar"></div></div>', unsafe_allow_html=True)
         st.markdown(f'<div class="paydos-label">🏁 Paydos Saati: {end_hour}:00</div>', unsafe_allow_html=True)
     else: st.success(f"✅ {L['shift_end']}")
@@ -181,12 +160,10 @@ else:
 
     st.write("---")
     
-    # 📑 KISALTMALAR PANELİ (STATİK BİLGİ)
     with st.expander(f"ℹ️ {L['legend']}"):
         for k, v in STATUS_MAP.items():
             st.markdown(f"**{k}:** {v}")
 
-    # 🗓️ TARİH MOTORU VE TAKVİM (KESİN DÜZELTME)
     t_cols = [c for c in df.columns if '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
     for h_no, i in enumerate(range(0, len(t_cols), 7), 1):
         hafta = t_cols[i:i+7]
@@ -196,13 +173,12 @@ else:
                 durum = str(row_g[t_col]).strip().upper()
                 mesai = str(row_s[t_col]).strip()
                 
-                # GÜN-AY-YIL SIRALAMASINI ZORLA (dayfirst=True)
-                try:
-                    dt = pd.to_datetime(t_col, dayfirst=True)
-                    m_name = AYLAR_TR[dt.month]
-                    day_label = f"{dt.day:02d} {m_name}"
+                # ÇELİK GİBİ TARİH ÇÖZÜCÜ
+                dt = parse_filyos_date(t_col)
+                if dt:
+                    day_label = f"{dt.day:02d} {AYLAR_TR[dt.month]}"
                     g_adi = GUNLER_TR[dt.weekday()]
-                except:
+                else:
                     day_label = str(t_col); g_adi = ""
 
                 cls = "status-n" if "N" in durum else "status-htc" if "HT" in durum else "status-hc" if "HÇ" in durum else "status-b"
@@ -211,7 +187,6 @@ else:
                 st.markdown(f'<div class="day-item {cls}">{durum}<br><span style="font-size:10px; font-weight:800;">{day_label}</span><br><span style="font-size:9px; opacity:0.8;">{g_adi}</span>{mesai_html}</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
-    # İtiraz Paneli
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.subheader(f"🚨 {L['appeal_head']}")
     konu = st.selectbox("Konu", ["...", "Puantaj İtirazı", "Mesai İtirazı", "Diğer"], label_visibility="collapsed")
