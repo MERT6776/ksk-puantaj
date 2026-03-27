@@ -29,17 +29,14 @@ if 'lang' not in st.session_state: st.session_state['lang'] = "TR"
 if 'filter_status' not in st.session_state: st.session_state['filter_status'] = None
 L = LANGS[st.session_state['lang']]
 
-# Türkiye Saati ve Mesai Hesaplama
+# Türkiye Saati ve Mesai
 now_tr = datetime.utcnow() + timedelta(hours=3)
 clock_init = now_tr.strftime("%d.%m.%Y | %H:%M:%S")
-
-# Vardiya İlerlemesi (08:00 - 18:00 arası baz alınmıştır)
-start_hour = 8
-end_hour = 18
+start_hour, end_hour = 8, 18
 current_hour_decimal = now_tr.hour + now_tr.minute / 60
 shift_pct = max(0, min(100, (current_hour_decimal - start_hour) / (end_hour - start_hour) * 100))
 
-# 3. CSS VE JAVASCRIPT
+# 3. HIGH-VISIBILITY CSS
 st.markdown(f"""
     <style>
     .stApp {{ background: transparent !important; }}
@@ -52,22 +49,28 @@ st.markdown(f"""
         background: rgba(5, 10, 20, 0.88); z-index: -1; backdrop-filter: brightness(1.1) saturate(1.4);
     }}
 
-    /* SAAT TASARIMI */
+    /* BÜYÜTÜLMÜŞ SAAT */
     #live-clock {{
         text-align: right; color: #ffd700; font-family: 'Courier New', monospace;
-        font-weight: 900; font-size: 18px; letter-spacing: 1.5px;
-        padding: 10px; text-shadow: 2px 2px 4px black; min-height: 30px;
+        font-weight: 900; font-size: 22px; letter-spacing: 2px;
+        padding: 10px; text-shadow: 2px 2px 5px black;
     }}
 
-    /* VARDİYA İLERLEME ÇUBUĞU */
+    /* BÜYÜTÜLMÜŞ KARŞILAMA VE KULLANICI */
+    .user-header {{ font-size: 32px; font-weight: 900; color: white; margin-bottom: 0px; }}
+    .user-sub {{ font-size: 18px; font-weight: 700; color: rgba(255,215,0,0.9); margin-bottom: 20px; }}
+
+    /* BÜYÜTÜLMÜŞ PAYDOS BİLGİSİ */
+    .paydos-label {{ font-size: 20px; font-weight: 800; color: #ffd700; margin-top: 10px; text-transform: uppercase; }}
+
     .shift-container {{
-        width: 100%; background: rgba(255, 255, 255, 0.1); border-radius: 10px;
-        height: 12px; margin: 10px 0; border: 1px solid rgba(255, 215, 0, 0.3); overflow: hidden;
+        width: 100%; background: rgba(255, 255, 255, 0.1); border-radius: 12px;
+        height: 16px; margin: 15px 0; border: 1px solid rgba(255, 215, 0, 0.4); overflow: hidden;
     }}
     .shift-bar {{
         width: {shift_pct}%; height: 100%; 
         background: linear-gradient(90deg, #b8860b, #ffd700);
-        box-shadow: 0 0 10px #ffd700; transition: width 0.5s ease-in-out;
+        box-shadow: 0 0 15px #ffd700; transition: width 0.5s ease-in-out;
     }}
 
     .glass-card {{
@@ -78,31 +81,29 @@ st.markdown(f"""
 
     .stExpander {{
         background: rgba(40, 30, 20, 0.4) !important; border: 1px solid #b8860b !important;
-        border-radius: 10px !important; border-left: 8px solid #b8860b !important;
-        margin-bottom: 10px !important;
+        border-radius: 10px !important; border-left: 10px solid #b8860b !important;
     }}
 
-    .day-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; }}
-    .day-item {{ text-align: center; font-weight: 900; border-radius: 12px; padding: 10px 5px; color: white; transition: 0.3s; }}
+    .day-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 12px; }}
+    .day-item {{ text-align: center; font-weight: 900; border-radius: 12px; padding: 12px 5px; color: white; }}
     
     .status-n {{ background: linear-gradient(135deg, #15803d, #166534); border: 1px solid #22c55e; }}
     .status-htc {{ background: linear-gradient(135deg, #b45309, #92400e); border: 1px solid #fbbf24; }}
     .status-hc {{ background: linear-gradient(135deg, #1d4ed8, #1e40af); border: 1px solid #60a5fa; }}
     .status-b {{ background: linear-gradient(135deg, #991b1b, #7f1d1d); border: 1px solid #f87171; }}
-    .status-old {{ background: rgba(71, 85, 105, 0.6); border: 1px solid #94a3b8; }}
 
-    .highlight-active {{ box-shadow: 0 0 25px #ffd700 !important; transform: scale(1.08); border: 2px solid white !important; }}
-    
-    /* ✒️ POWERED BY MERT DÜZCÜK - ZARİF VE KÜÇÜK */
+    /* ✒️ POWERED BY MERT DÜZCÜK - ZARİF BOYUTTA KALDI */
     .mert-signature {{
-        position: fixed; bottom: 12px; left: 15px; font-size: 13px; font-weight: 900;
-        color: white; opacity: 0.7; letter-spacing: 1.5px; z-index: 1000;
+        position: fixed; bottom: 12px; left: 15px; font-size: 14px; font-weight: 900;
+        color: white; opacity: 0.7; letter-spacing: 2px; z-index: 1000;
         text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
     }}
 
     @media (max-width: 600px) {{
-        #live-clock {{ font-size: 14px; }}
-        .mert-signature {{ font-size: 11px; bottom: 8px; left: 10px; }}
+        .user-header {{ font-size: 24px; }}
+        .user-sub {{ font-size: 15px; }}
+        .paydos-label {{ font-size: 16px; }}
+        #live-clock {{ font-size: 16px; }}
     }}
     </style>
 
@@ -127,7 +128,7 @@ st.markdown(f"""
     </script>
     """, unsafe_allow_html=True)
 
-# 4. VERİ MOTORU VE SELAMLAMA
+# 4. VERİ VE SELAMLAMA
 @st.cache_data
 def load_data():
     try:
@@ -138,7 +139,7 @@ def load_data():
 
 df = load_data()
 
-# Selamlama Belirleme
+# Selamlama
 hour_greet = now_tr.hour
 if 5 <= hour_greet < 12: greet_key = "welcome_morning"
 elif 12 <= hour_greet < 18: greet_key = "welcome_day"
@@ -167,17 +168,18 @@ else:
     row_g = u_df[u_df['N-M'].astype(str).str.contains('Gün', na=False, case=False)].iloc[0]
     row_s = u_df[u_df['N-M'].astype(str).str.contains('SAAT', na=False, case=False)].iloc[0]
 
-    st.markdown(f"## {L[greet_key]}, {row_g['AD SOYAD']} 👷‍♂️")
+    # BÜYÜTÜLMÜŞ ÜST BİLGİ ALANI
+    st.markdown(f'<div class="user-header">{L[greet_key]}, {row_g["AD SOYAD"]} 👷‍♂️</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="user-sub">{row_g["GÖREVİ"]} | {row_g["FİORİ NO"]}</div>', unsafe_allow_html=True)
     
-    # Vardiya İlerleme Göstergesi
+    # BÜYÜTÜLMÜŞ VARDİYA BİLGİSİ
     if current_hour_decimal < end_hour:
         st.markdown(f'<div class="shift-container"><div class="shift-bar"></div></div>', unsafe_allow_html=True)
-        st.caption(f"🏁 Paydos Saati: {end_hour}:00")
+        st.markdown(f'<div class="paydos-label">🏁 Paydos Saati: {end_hour}:00</div>', unsafe_allow_html=True)
     else:
         st.success(f"✅ {L['shift_end']}")
 
-    st.caption(f"{row_g['GÖREVİ']} | {row_g['FİORİ NO']}")
-
+    st.write("")
     c1, c2, c3 = st.columns(3)
     with c1: st.metric(L['paid_days'], row_g.get("Personele Ödenecek Gün", 0))
     with c2: st.metric(L['phys_days'], row_g.get("Fiziki Çalışılan Gün", 0))
@@ -185,7 +187,7 @@ else:
 
     st.write("---")
 
-    # Legend Filtreleme
+    # Legend ve Takvim
     st.write(f"### ℹ️ {L['legend']}")
     cols_leg = st.columns(4)
     for idx, (k, v) in enumerate(STATUS_MAP.items()):
@@ -204,31 +206,25 @@ else:
                 high_cls = "highlight-active" if st.session_state['filter_status'] == durum else ""
                 try:
                     dt = pd.to_datetime(t_col, dayfirst=True)
-                    is_feb = dt.month == 2
                     day_label = f"{dt.day:02d}/{AYLAR_TR[dt.month] if st.session_state['lang']=='TR' else dt.strftime('%b').upper()}"
                     g_adi = GUNLER_TR[dt.weekday()][:3]
-                except: is_feb = "02" in str(t_col); day_label = str(t_col); g_adi = ""
+                except: day_label = str(t_col); g_adi = ""
 
-                cls = "status-old" if is_feb else ("status-n" if "N" in durum else "status-htc" if "HT" in durum else "status-hc" if "HÇ" in durum else "status-b")
-                mesai_html = f'<div style="background:#facc15; color:black; font-size:10px; padding:2px; border-radius:4px; margin-top:4px; font-weight:bold;">+{mesai}S</div>' if not is_feb and mesai not in ["0", "0.0", "nan", ""] else ""
-                st.markdown(f'<div class="day-item {cls} {high_cls}">{durum}<br><span style="font-size:9px; opacity:0.8;">{g_adi} {day_label}</span>{mesai_html}</div>', unsafe_allow_html=True)
+                cls = "status-n" if "N" in durum else "status-htc" if "HT" in durum else "status-hc" if "HÇ" in durum else "status-b"
+                mesai_html = f'<div style="background:#facc15; color:black; font-size:10px; padding:2px; border-radius:4px; margin-top:4px; font-weight:bold;">+{mesai}S</div>' if mesai not in ["0", "0.0", "nan", ""] else ""
+                st.markdown(f'<div class="day-item {cls} {high_cls}">{durum}<br><span style="font-size:10px; opacity:0.9;">{g_adi} {day_label}</span>{mesai_html}</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
     # İtiraz Paneli
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.subheader(f"🚨 {L['appeal_head']}")
     konu = st.selectbox(L['lang'], ["...", "Gün/Puantaj", "Mesai", "Diğer"], label_visibility="collapsed")
-    detay_gunler = ""
-    if konu != "...":
-        secilenler = st.multiselect(L['appeal_days'], t_cols)
-        if secilenler: detay_gunler = "\nSeçilen Günler: " + ", ".join([str(g) for g in secilenler])
     notunuz = st.text_area(L['note'])
     if st.button(L['send']):
-        msg = f"İTİRAZ: {row_g['AD SOYAD']}\nKonu: {konu}{detay_gunler}\nNot: {notunuz}"
-        st.link_button("ALİCAN BEY'E GÖNDER", f"https://wa.me/905435314160?text={urllib.parse.quote(msg)}")
+        msg = f"İTİRAZ: {row_g['AD SOYAD']}\nKonu: {konu}\nNot: {notunuz}"
+        st.link_button("GÖNDER", f"https://wa.me/905435314160?text={urllib.parse.quote(msg)}")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown(f'<div style="text-align:center; font-size:10px; color:rgba(255,255,255,0.4); margin-top:25px;">{L["audit"]}<br>{L["update"]}: {now_tr.strftime("%d.%m.%Y %H:%M")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align:center; font-size:11px; color:rgba(255,255,255,0.5); margin-top:25px;">{L["audit"]}<br>{L["update"]}: {now_tr.strftime("%d.%m.%Y %H:%M")}</div>', unsafe_allow_html=True)
 
-# ✒️ POWERED BY MERT DÜZCÜK
 st.markdown('<div class="mert-signature">POWERED BY Mert DÜZCÜK</div>', unsafe_allow_html=True)
