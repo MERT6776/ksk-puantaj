@@ -117,20 +117,16 @@ st.markdown(f"""
     .stExpander {{ background: {T["card_bg"]} !important; border: 1px solid {T["card_border"]} !important; border-radius: 14px !important; margin-bottom: 12px !important; box-shadow: {T["shadow"]}; }}
     summary {{ color: {T["text_main"]} !important; font-weight: 800 !important; }}
     
-    /* 🚀 HD NETLİK VE KARTAL GÖZÜ TASARIMI 🚀 */
     .day-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 10px; margin-top: 5px; }}
     
     .day-item {{ 
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         text-align: center; border-radius: 12px; color: white !important; 
-        padding: 6px 2px; /* Kutu içi boşlukları (padding) sıfıra yaklaştırdım */
-        min-height: 85px; /* Kutuları büyütmemek için min-height düşürüldü */
-        box-shadow: 0 6px 12px rgba(0,0,0,0.2); transition: transform 0.15s ease; 
-        gap: 3px; /* Yazılar arasındaki mesafeyi sıfırladım */
+        padding: 6px 2px; min-height: 85px; box-shadow: 0 6px 12px rgba(0,0,0,0.2); 
+        transition: transform 0.15s ease; gap: 3px; 
     }}
     .day-item:hover {{ transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.25); }}
     
-    /* YAZILARI DEVASA YAPTIM */
     .durum-text {{ font-size: 22px; font-weight: 900; line-height: 1; text-shadow: 1px 1px 3px rgba(0,0,0,0.4); }}
     .tarih-text {{ font-size: 14px; font-weight: 900; line-height: 1; letter-spacing: 0.5px; }}
     .gun-text {{ font-size: 11px; font-weight: 800; line-height: 1; opacity: 0.95; }}
@@ -171,7 +167,7 @@ st.markdown(f"""
     </script>
 """, unsafe_allow_html=True)
 
-# 4. VERİ MOTORU VE ÇELİK TARİH ÇÖZÜCÜ
+# 4. VERİ MOTORU VE YENİ YAPAY ZEKA TARİH DÜZELTİCİSİ
 @st.cache_data
 def load_data():
     try:
@@ -180,24 +176,6 @@ def load_data():
         return df
     except:
         return None
-
-def filyos_date_engine(t_col):
-    """Exceldeki metni ZORLA Gün-Ay-Yıl olarak parçalar."""
-    try:
-        clean_str = str(t_col).split(' ')[0]
-        if '.' in clean_str:
-            parts = clean_str.split('.')
-            if len(parts) >= 2:
-                gun = int(parts[0])
-                ay_num = int(parts[1])
-                yil = int(parts[2]) if len(parts) >= 3 else 2026
-                dt_obj = datetime(yil, ay_num, gun)
-                return dt_obj, f"{str(gun).zfill(2)} {AYLAR_TR[ay_num]}", GUNLER_TR[dt_obj.weekday()]
-        
-        dt_obj = pd.to_datetime(clean_str, dayfirst=True)
-        return dt_obj, f"{str(dt_obj.day).zfill(2)} {AYLAR_TR[dt_obj.month]}", GUNLER_TR[dt_obj.weekday()]
-    except:
-        return None, str(t_col), ""
 
 def get_status_class(durum):
     durum = str(durum).strip().upper()
@@ -268,20 +246,56 @@ else:
     else:
         st.success(f"✅ {L['shift_end']}")
 
-    # SADECE GÖRÜNEN MESAİLERİ TOPLA (ŞUBAT HARİÇ)
+    # ========================================================
+    # 🚀 KRONOLOJİK TARİH MOTORU (EXCEL BUG'INI YOK EDER)
+    # Excel Gün ile Ayı karıştırırsa, zaman makinesi geriye dönüp düzeltir.
+    # ========================================================
     t_cols = [c for c in df.columns if '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
-    calc_total = 0
+    
+    date_mapping = {}
+    last_date = None
     
     for t_col in t_cols:
-        dt_obj, _, _ = filyos_date_engine(t_col)
+        clean_str = str(t_col).split(' ')[0]
+        dt_obj = None
+        
+        # Eğer noktalıysa ilk olarak normal gün.ay.yıl okumaya çalış
+        if '.' in clean_str:
+            parts = clean_str.split('.')
+            if len(parts) >= 2:
+                try:
+                    dt_obj = datetime(int(parts[2]) if len(parts)>=3 else now_tr.year, int(parts[1]), int(parts[0]))
+                except: pass
+        
+        # Hâlâ çözülemediyse Pandas'a güven
+        if dt_obj is None:
+            try:
+                ts = pd.to_datetime(clean_str, dayfirst=True)
+                dt_obj = datetime(ts.year, ts.month, ts.day)
+            except: pass
+
+        # EN KRİTİK KONTROL: Zaman geriye akmaz!
+        if dt_obj:
+            if last_date and dt_obj < last_date:
+                # Excel 1 Mart yerine 3 Ocak okuduysa, tarihi anında takla attır!
+                try:
+                    dt_obj = datetime(dt_obj.year, dt_obj.day, dt_obj.month)
+                except: pass
+            last_date = dt_obj
+            
+        date_mapping[t_col] = dt_obj
+
+    # SADECE GÖRÜNEN MESAİLERİ TOPLA (ŞUBAT HARİÇ)
+    calc_total = 0
+    for t_col in t_cols:
+        dt_obj = date_mapping.get(t_col)
         is_february = (dt_obj is not None and dt_obj.month == 2)
         m_val = str(row_s.get(t_col, "")).strip()
         
         if not is_february and m_val not in ["", "0", "0.0", "nan", "None"]:
             try:
                 calc_total += float(m_val.replace(',', '.'))
-            except:
-                pass
+            except: pass
                 
     total_overtime_val = calc_total
     toplam_mesai_gosterim = f"{int(total_overtime_val)}" if total_overtime_val % 1 == 0 else f"{total_overtime_val}"
@@ -305,16 +319,23 @@ else:
                 durum = str(row_g.get(t_col, "")).strip().upper()
                 mesai = str(row_s.get(t_col, "")).strip()
 
-                dt_obj, day_label, g_adi = filyos_date_engine(t_col)
+                dt_obj = date_mapping.get(t_col)
+                if dt_obj:
+                    day_label = f"{str(dt_obj.day).zfill(2)} {AYLAR_TR[dt_obj.month]}"
+                    g_adi = GUNLER_TR[dt_obj.weekday()]
+                    is_february = (dt_obj.month == 2)
+                else:
+                    day_label = str(t_col)
+                    g_adi = ""
+                    is_february = False
+
                 cls = get_status_class(durum)
 
-                # ŞUBAT GİZLEME VE DEV MESAİ ETİKETİ
-                is_february = (dt_obj is not None and dt_obj.month == 2)
+                # ŞUBAT GİZLEME VE COMPACT MESAİ ETİKETİ
                 mesai_html = ""
                 if not is_february and mesai not in ["0", "0.0", "nan", "", "None"]:
                     mesai_html = f'<div style="background:#facc15; color:black; font-size:12px; padding:2px 8px; border-radius:6px; margin-top:2px; font-weight:900; box-shadow:0 2px 4px rgba(0,0,0,0.3);">⚡ {mesai} {L["overtime"]}</div>'
 
-                # HTML: ESKİDEN <BR> İLE ALT ALTA GEÇİYORDU, ŞİMDİ SPAN VE FLEX ILE VAKUMLANDI!
                 st.markdown(f'''
                     <div class="day-item {cls}">
                         <span class="durum-text">{durum}</span>
