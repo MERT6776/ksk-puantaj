@@ -2,11 +2,12 @@ import streamlit as st
 import pandas as pd
 import urllib.parse
 import time
+from datetime import datetime
 
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. Premium CSS
+# 2. Premium CSS (Jilet gibi bir görünüm için)
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;} header {visibility: hidden;} footer {visibility: hidden;}
@@ -15,7 +16,7 @@ st.markdown("""
     body::before {
         content: ""; position: fixed; top: -10%; left: -10%; width: 120%; height: 120%;
         background-image: url("https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg");
-        background-size: cover; background-position: center; z-index: -2; opacity: 0.4;
+        background-size: cover; background-position: center; z-index: -2; opacity: 0.3;
     }
     body::after {
         content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -36,13 +37,17 @@ st.markdown("""
     .status-htc { background: #92400e; border: 1px solid #f59e0b; }
     .status-hc { background: #1e40af; border: 1px solid #3b82f6; }
     .status-b { background: #450a0a; border: 1px solid #ef4444; }
-    .mesai-tag { background: #facc15; color: black; padding: 2px 4px; border-radius: 4px; font-size: 10px; margin-top: 2px; }
+    .mesai-tag { background: #facc15; color: black; padding: 2px 4px; border-radius: 4px; font-size: 10px; margin-top: 2px; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
 @st.cache_data
 def load_data():
-    try: return pd.read_excel("veri.xlsx")
+    try:
+        # Excel'i oku ve sütunlardaki gizli boşlukları temizle
+        df = pd.read_excel("veri.xlsx")
+        df.columns = [str(c).strip() for c in df.columns]
+        return df
     except: return None
 
 df = load_data()
@@ -57,6 +62,7 @@ if not st.session_state['logged_in']:
     sifre = st.text_input("DOĞUM YILI", type="password")
     if st.button("SİSTEME GİRİŞ YAP"):
         if df is not None:
+            # Sütun isimlerini garantiye alalım
             res = df[(df['FİORİ NO'].astype(str) == sicil) & (df['DOĞUM YILI'].astype(str) == sifre)]
             if not res.empty:
                 st.session_state['user_data'] = res
@@ -68,55 +74,66 @@ if not st.session_state['logged_in']:
 # --- ANA EKRAN ---
 else:
     user_df = st.session_state['user_data']
+    # Gün ve Saat satırlarını ayır (N-M sütununa göre)
     row_gun = user_df[user_df['N-M'].astype(str).str.contains('Gün', na=False, case=False)].iloc[0]
     row_saat = user_df[user_df['N-M'].astype(str).str.contains('SAAT', na=False, case=False)].iloc[0]
 
     st.markdown(f'<div class="dark-card"><h3>👋 Hoş Geldin, {row_gun["AD SOYAD"]}</h3><small>{row_gun["GÖREVİ"]} | Sicil: {row_gun["FİORİ NO"]}</small></div>', unsafe_allow_html=True)
 
-    # Özetler
+    # Özet Veriler
     c1, c2, c3 = st.columns(3)
     c1.metric("Ödenecek Gün", row_gun.get('Personele Ödenecek Gün', 0))
     c2.metric("Fiziki Gün", row_gun.get('Fiziki Çalışılan Gün', 0))
     c3.metric("SGK Gün", row_gun.get('SGK Ödenecek Gün', 0))
 
-    # --- AKILLI TARİH TARAYICI VE ÇEKMECELER ---
-    st.write("### 🗓️ Günlük Puantaj Detayları")
+    st.write("### 🗓️ Haftalık Puantaj Çekmeceleri")
     
-    # Sütunları tara: İçinde tarih formatına benzer bir şey olan sütunları bul
+    # Tarih Sütunlarını Tespit Et (Excel'in tarih objelerini yakalar)
     tarih_sutunlari = []
     for col in df.columns:
-        col_str = str(col)
-        if any(char.isdigit() for char in col_str) and ('.' in col_str or '/' in col_str):
+        # Eğer sütun adı bir datetime objesiyse veya içinde tarih geçiyorsa
+        if isinstance(col, datetime) or (isinstance(col, str) and any(x in col for x in ['.', '/', '202'])):
             tarih_sutunlari.append(col)
 
     if not tarih_sutunlari:
-        st.warning("⚠️ Excel'de tarih sütunları otomatik tanınamadı. Lütfen sütun başlıklarını kontrol edin.")
+        st.warning("⚠️ Tarih sütunları bulunamadı. Lütfen Excel başlıklarını kontrol edin.")
     else:
-        # Haftalık Çekmeceler (7'şerli)
+        # Haftalık grupla (7 gün)
         for i in range(0, len(tarih_sutunlari), 7):
             hafta = tarih_sutunlari[i:i+7]
-            with st.expander(f"📅 {hafta[0]} - {hafta[-1]} Arası Detaylar"):
-                cols = st.columns(7)
+            # Başlık için tarihi güzelleştir (23.02 gibi)
+            h_start = hafta[0].strftime('%d.%m') if hasattr(hafta[0], 'strftime') else str(hafta[0])[:5]
+            h_end = hafta[-1].strftime('%d.%m') if hasattr(hafta[-1], 'strftime') else str(hafta[-1])[:5]
+            
+            with st.expander(f"📅 {h_start} - {h_end} Tarihleri Arası Detaylar"):
+                cols = st.columns(len(hafta))
                 for idx, t_col in enumerate(hafta):
                     with cols[idx]:
                         durum = str(row_gun[t_col]).strip().upper()
                         mesai = str(row_saat[t_col]).strip()
                         
+                        # Renk belirleme
                         cls = "status-b"
                         if "N" in durum: cls = "status-n"
                         elif "HTÇ" in durum: cls = "status-htc"
                         elif "HÇ" in durum: cls = "status-hc"
                         
                         st.markdown(f'<div class="day-box {cls}">{durum}</div>', unsafe_allow_html=True)
-                        if mesai not in ["0", "0.0", "NAN", "NONE", ""]:
+                        
+                        # Mesai varsa göster
+                        if mesai not in ["0", "0.0", "nan", "None", ""]:
                             st.markdown(f'<div class="mesai-tag">+{mesai}s</div>', unsafe_allow_html=True)
-                        st.caption(str(t_col).split('.')[0] + "/" + str(t_col).split('.')[1] if '.' in str(t_col) else str(t_col))
+                        
+                        # Tarih alt yazısı
+                        t_label = t_col.strftime('%d/%m') if hasattr(t_col, 'strftime') else str(t_col)[:5]
+                        st.caption(t_label)
 
     # Maaş Metre
     st.markdown('<div class="dark-card">', unsafe_allow_html=True)
     yevmiye = st.number_input("Günlük Yevmiyeniz (TL)", min_value=0, step=100)
     if yevmiye > 0:
-        st.success(f"💰 Tahmini Hak Ediş: {yevmiye * float(row_gun.get('Personele Ödenecek Gün', 0)):,.2f} ₺")
+        total = yevmiye * float(row_gun.get('Personele Ödenecek Gün', 0))
+        st.success(f"💰 Tahmini Hak Ediş: {total:,.2f} ₺")
     st.markdown('</div>', unsafe_allow_html=True)
     
     st.link_button("📲 FAZ-2 İK DESTEK HATTI", "https://wa.me/905459157444")
