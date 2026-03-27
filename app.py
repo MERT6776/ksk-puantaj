@@ -182,7 +182,8 @@ if 'user_data' not in st.session_state:
 @st.cache_data
 def load_data():
     try:
-        return pd.read_excel("veri.xlsx", sheet_name="VERI")
+        # Excel okuma kısmı DÜZELTİLDİ: Sayfa adı ne olursa olsun okur.
+        return pd.read_excel("veri.xlsx")
     except:
         return None
 
