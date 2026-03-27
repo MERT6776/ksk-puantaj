@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ
+# 2. DİL VE VERİ SÖZLÜĞÜ (RESMİ BİLGİLENDİRME VE ÇIKIŞ BUTONU)
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler",
@@ -16,7 +16,10 @@ LANGS = {
         "week_suffix": "PUANTAJ DURUM TAKVİMİ", "appeal_head": "İtiraz Merkezi",
         "send": "ALİCAN BAYAT'A GÖNDER", "lang": "Dil Seçimi", "note": "Ek Notunuz",
         "legend": "KISALTMALAR VE ANLAMLARI", "shift_end": "Mesai Tamamlandı",
-        "theme": "Tema Seçimi", "month_title": "PUANTAJI", "overtime": "SAAT"
+        "theme": "Tema Seçimi", "month_title": "PUANTAJI", "overtime": "SAAT",
+        "logout": "ÇIKIŞ YAP", 
+        "sys_note_title": "📌 SİSTEM BİLGİLENDİRMESİ", 
+        "sys_note_text": "Sisteme 22 Mart tarihine kadar olan puantaj ve mesai kayıtları işlenmiştir. Takip eden günlerin veri girişi devam etmektedir."
     },
     "EN": {
         "title": "FILYOS PHASE-2", "welcome_morning": "Good Morning", "welcome_day": "Good Day",
@@ -26,7 +29,10 @@ LANGS = {
         "week_suffix": "STATUS TABLE", "appeal_head": "Appeal Center",
         "send": "SEND", "lang": "Language", "note": "Note",
         "legend": "LEGEND", "shift_end": "Shift Completed",
-        "theme": "Theme", "month_title": "PAYROLL", "overtime": "HRS"
+        "theme": "Theme", "month_title": "PAYROLL", "overtime": "HRS",
+        "logout": "LOGOUT", 
+        "sys_note_title": "📌 SYSTEM NOTICE", 
+        "sys_note_text": "Payroll and overtime records up to March 22 have been entered into the system. Data entry for subsequent days is ongoing."
     },
     "UZ": {
         "title": "FİLYOS FAZ-2", "welcome_morning": "Xayrli tong", "welcome_day": "Xayrli kun",
@@ -36,7 +42,10 @@ LANGS = {
         "week_suffix": "PUANTAJ JADVALI", "appeal_head": "E'tiroz Markazi",
         "send": "YUBORISH", "lang": "Til", "note": "Eslatma",
         "legend": "QISQARTMALAR", "shift_end": "Ish yakunlandi",
-        "theme": "Mavzu", "month_title": "PUANTAJI", "overtime": "SOAT"
+        "theme": "Mavzu", "month_title": "PUANTAJI", "overtime": "SOAT",
+        "logout": "CHIQISH", 
+        "sys_note_title": "📌 TIZIM MA'LUMOTI", 
+        "sys_note_text": "Tizimga 22-martgacha bo'lgan ish vaqti va qo'shimcha soatlar kiritilgan. Keyingi kunlar uchun ma'lumotlarni kiritish davom etmoqda."
     }
 }
 
@@ -142,8 +151,22 @@ st.markdown(f"""
     
     .stTextInput > div > div > input, .stTextArea textarea, .stSelectbox > div > div {{ background: {T["input_bg"]} !important; color: {T["input_text"]} !important; border: 1px solid {T["card_border"]} !important; border-radius: 12px !important; }}
     .stTextInput label, .stTextArea label, .stSelectbox label {{ color: {T["text_soft"]} !important; font-weight: 700 !important; }}
+    
+    /* GÖNDER BUTONU VE ÇIKIŞ BUTONU TASARIMI */
     .stButton > button, .stLinkButton > a {{ width: 100%; border-radius: 12px !important; border: none !important; font-weight: 800 !important; min-height: 46px; background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}) !important; color: #ffffff !important; box-shadow: 0 10px 22px rgba(0,0,0,0.18); }}
     
+    /* ÖNEMLİ BİLGİ PANOSU */
+    .info-banner {{
+        background-color: rgba(234, 179, 8, 0.15);
+        border-left: 6px solid #eab308;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }}
+    .info-title {{ margin: 0; color: #eab308; font-size: 16px; font-weight: 900; letter-spacing: 1px; }}
+    .info-text {{ margin: 6px 0 0 0; font-size: 14px; font-weight: 600; color: {T["text_main"]}; opacity: 0.9; }}
+
     .mert-signature {{ position: fixed; bottom: 12px; left: 15px; font-size: 13px; font-weight: 900; color: {T["text_soft"]}; opacity: 0.8; letter-spacing: 2px; z-index: 1000; }}
     @media (max-width: 600px) {{ .user-header {{ font-size: 25px; }} #live-clock {{ font-size: 16px; }} .day-grid {{ grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 8px; }} .day-item {{ min-height: 80px; padding: 4px 2px; }} }}
     </style>
@@ -221,13 +244,19 @@ if not st.session_state['logged_in']:
 else:
     u_df = st.session_state['user_data']
 
-    ust1, ust2 = st.columns([1, 1])
+    # Üst Menü: Dil, Tema ve ÇIKIŞ Butonu
+    ust1, ust2, ust3 = st.columns([1, 1, 1])
     with ust1:
-        yeni_dil = st.selectbox(L['lang'], ["TR", "EN", "UZ"], index=["TR", "EN", "UZ"].index(st.session_state['lang']), key="top_lang")
+        yeni_dil = st.selectbox(L['lang'], ["TR", "EN", "UZ"], index=["TR", "EN", "UZ"].index(st.session_state['lang']), key="top_lang", label_visibility="collapsed")
         if yeni_dil != st.session_state['lang']: st.session_state['lang'] = yeni_dil; st.rerun()
     with ust2:
-        yeni_tema = st.selectbox(L['theme'], list(THEMES.keys()), index=list(THEMES.keys()).index(st.session_state['theme']), key="top_theme")
+        yeni_tema = st.selectbox(L['theme'], list(THEMES.keys()), index=list(THEMES.keys()).index(st.session_state['theme']), key="top_theme", label_visibility="collapsed")
         if yeni_tema != st.session_state['theme']: st.session_state['theme'] = yeni_tema; st.rerun()
+    with ust3:
+        if st.button("🚪 " + L['logout'], use_container_width=True):
+            st.session_state['logged_in'] = False
+            st.session_state['user_data'] = None
+            st.rerun()
 
     L = LANGS[st.session_state['lang']]
     row_g = u_df[u_df['N-M'].astype(str).str.contains('Gün', na=False, case=False)].iloc[0]
@@ -236,9 +265,17 @@ else:
     hour_greet = now_tr.hour
     greet_txt = L["welcome_morning"] if 5 <= hour_greet < 12 else L["welcome_day"] if 12 <= hour_greet < 18 else L["welcome_evening"] if 18 <= hour_greet < 23 else L["welcome_night"]
 
+    st.write("") # Boşluk
     st.markdown(f'<div class="user-header">{greet_txt}, {row_g["AD SOYAD"]} 👷‍♂️</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="user-sub">{row_g["GÖREVİ"]} | {row_g["FİORİ NO"]}</div>', unsafe_allow_html=True)
-    st.markdown(f"<div class='month-title'>{ay_baslik}</div>", unsafe_allow_html=True)
+    
+    # 📌 RESMİ SİSTEM BİLGİLENDİRMESİ
+    st.markdown(f"""
+        <div class="info-banner">
+            <h4 class="info-title">{L['sys_note_title']}</h4>
+            <p class="info-text">{L['update_info']}</p>
+        </div>
+    """, unsafe_allow_html=True)
 
     if curr_decimal < end_hour:
         st.markdown('<div class="shift-container"><div class="shift-bar"></div></div>', unsafe_allow_html=True)
@@ -248,7 +285,6 @@ else:
 
     # ========================================================
     # 🚀 KRONOLOJİK TARİH MOTORU (EXCEL BUG'INI YOK EDER)
-    # Excel Gün ile Ayı karıştırırsa, zaman makinesi geriye dönüp düzeltir.
     # ========================================================
     t_cols = [c for c in df.columns if '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
     
@@ -259,7 +295,6 @@ else:
         clean_str = str(t_col).split(' ')[0]
         dt_obj = None
         
-        # Eğer noktalıysa ilk olarak normal gün.ay.yıl okumaya çalış
         if '.' in clean_str:
             parts = clean_str.split('.')
             if len(parts) >= 2:
@@ -267,17 +302,14 @@ else:
                     dt_obj = datetime(int(parts[2]) if len(parts)>=3 else now_tr.year, int(parts[1]), int(parts[0]))
                 except: pass
         
-        # Hâlâ çözülemediyse Pandas'a güven
         if dt_obj is None:
             try:
                 ts = pd.to_datetime(clean_str, dayfirst=True)
                 dt_obj = datetime(ts.year, ts.month, ts.day)
             except: pass
 
-        # EN KRİTİK KONTROL: Zaman geriye akmaz!
         if dt_obj:
             if last_date and dt_obj < last_date:
-                # Excel 1 Mart yerine 3 Ocak okuduysa, tarihi anında takla attır!
                 try:
                     dt_obj = datetime(dt_obj.year, dt_obj.day, dt_obj.month)
                 except: pass
