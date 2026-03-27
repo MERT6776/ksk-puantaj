@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ (TOPLAM MESAİ SAATİ GÜNCELLENDİ)
+# 2. DİL VE VERİ SÖZLÜĞÜ
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler",
@@ -49,7 +49,6 @@ STATUS_MAP = {
 AYLAR_TR = {1: "OCAK", 2: "ŞUBAT", 3: "MART", 4: "NİSAN", 5: "MAYIS", 6: "HAZİRAN", 7: "TEMMUZ", 8: "AĞUSTOS", 9: "EYLÜL", 10: "EKİM", 11: "KASIM", 12: "ARALIK"}
 GUNLER_TR = ["PZT", "SALI", "ÇAR", "PER", "CUMA", "CMT", "PAZ"]
 
-# 2.1 TEMA SÖZLÜĞÜ (GÖZDEN GEÇİRİLDİ, AÇIK/KOYU UYUMU SAĞLANDI)
 THEMES = {
     "Kurumsal Koyu": {
         "bg_grad_1": "#111827", "bg_grad_2": "#1e293b", "card_bg": "rgba(255,255,255,0.08)",
@@ -71,7 +70,6 @@ THEMES = {
     }
 }
 
-# Session State
 if 'lang' not in st.session_state: st.session_state['lang'] = "TR"
 if 'theme' not in st.session_state: st.session_state['theme'] = "Kurumsal Koyu"
 if 'logged_in' not in st.session_state: st.session_state['logged_in'] = False
@@ -79,7 +77,6 @@ if 'logged_in' not in st.session_state: st.session_state['logged_in'] = False
 L = LANGS[st.session_state['lang']]
 T = THEMES[st.session_state['theme']]
 
-# Türkiye saati ve vardiya
 now_tr = datetime.utcnow() + timedelta(hours=3)
 clock_init = now_tr.strftime("%d.%m.%Y | %H:%M:%S")
 start_hour, end_hour = 8, 18
@@ -97,22 +94,16 @@ st.markdown(f"""
         background: {T["overlay"]}; z-index: -1; backdrop-filter: blur(3px);
     }}
     .block-container {{ padding-top: 1rem !important; padding-bottom: 2rem !important; max-width: 920px !important; }}
-    
-    /* ÜSTTEKİ CANLI SAAT (GERİ GELDİ VE RENK UYUMLU) */
     #live-clock {{ 
         text-align: right; color: {T["clock"]}; font-family: 'Courier New', monospace; 
         font-weight: 900; font-size: 22px; letter-spacing: 1.5px; padding-bottom: 15px; 
         text-shadow: 0 2px 4px rgba(0,0,0,0.2); 
     }}
-    
     .portal-title {{ text-align: center; color: {T["text_main"]}; letter-spacing: 3px; font-weight: 900; margin-bottom: 12px; }}
     .month-title {{ text-align: center; color: {T["accent"]}; font-size: 18px; font-weight: 800; margin-top: -8px; margin-bottom: 18px; letter-spacing: 1px; }}
-    
-    /* KULLANICI BİLGİLERİ (TEMA UYUMLU) */
     .user-header {{ font-size: 32px; font-weight: 900; color: {T["text_main"]}; margin-bottom: 6px; }}
     .user-sub {{ font-size: 18px; font-weight: 700; color: {T["text_soft"]}; margin-bottom: 18px; }}
     .paydos-label {{ font-size: 18px; font-weight: 800; color: {T["accent_2"]}; margin-top: 8px; text-transform: uppercase; }}
-    
     .glass-card {{ background: {T["card_bg"]}; backdrop-filter: blur(20px); border-radius: 18px; border: 1px solid {T["card_border"]}; padding: 20px; margin-bottom: 20px; color: {T["text_main"]}; box-shadow: {T["shadow"]}; }}
     .shift-container {{ width: 100%; background: rgba(128,128,128,0.2); border-radius: 999px; height: 18px; margin: 14px 0; border: 1px solid {T["card_border"]}; overflow: hidden; }}
     .shift-bar {{ width: {shift_pct}%; height: 100%; background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}); box-shadow: 0 0 20px {T["accent"]}; border-radius: 999px; }}
@@ -124,8 +115,6 @@ st.markdown(f"""
     summary {{ color: {T["text_main"]} !important; font-weight: 800 !important; }}
     
     .day-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 12px; margin-top: 10px; }}
-    
-    /* KUTUCUKLAR İÇİ HER ZAMAN BEYAZ (Çünkü arkaplanları koyu renkli: yeşil, kırmızı vs.) */
     .day-item {{ text-align: center; font-weight: 900; border-radius: 14px; padding: 12px 6px; color: white !important; min-height: 95px; box-shadow: 0 8px 16px rgba(0,0,0,0.18); transition: transform 0.15s ease, box-shadow 0.15s ease; }}
     .day-item:hover {{ transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,0,0,0.22); }}
     
@@ -176,11 +165,10 @@ def load_data():
         return None
 
 def filyos_date_engine(t_col):
-    """Exceldeki metni ZORLA Gün-Ay-Yıl olarak parçalar. Hata yapmaz."""
+    """Exceldeki metni ZORLA Gün-Ay-Yıl olarak parçalar. Şaşmaz."""
     try:
         clean_str = str(t_col).split(' ')[0]
         if '.' in clean_str:
-            # Örn: 01.03.2026 -> parts[0]=01 (GÜN), parts[1]=03 (AY), parts[2]=2026 (YIL)
             parts = clean_str.split('.')
             if len(parts) >= 2:
                 gun = int(parts[0])
@@ -189,7 +177,6 @@ def filyos_date_engine(t_col):
                 dt_obj = datetime(yil, ay_num, gun)
                 return dt_obj, f"{str(gun).zfill(2)} {AYLAR_TR[ay_num]}", GUNLER_TR[dt_obj.weekday()]
         
-        # Eğer noktalı değilse Pandas ile zorla (dayfirst=True HAYAT KURTARIR)
         dt_obj = pd.to_datetime(clean_str, dayfirst=True)
         return dt_obj, f"{str(dt_obj.day).zfill(2)} {AYLAR_TR[dt_obj.month]}", GUNLER_TR[dt_obj.weekday()]
     except:
@@ -239,7 +226,6 @@ if not st.session_state['logged_in']:
 else:
     u_df = st.session_state['user_data']
 
-    # Tema ve Dil Değiştirme
     ust1, ust2 = st.columns([1, 1])
     with ust1:
         yeni_dil = st.selectbox(L['lang'], ["TR", "EN", "UZ"], index=["TR", "EN", "UZ"].index(st.session_state['lang']), key="top_lang")
@@ -265,18 +251,53 @@ else:
     else:
         st.success(f"✅ {L['shift_end']}")
 
+    # ========================================================
+    # 🚀 KURŞUN GEÇİRMEZ TOPLAM MESAİ HESAPLAYICI (YENİ EKLENDİ)
+    # ========================================================
+    t_cols = [c for c in df.columns if '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
+    
+    total_overtime_val = 0
+    # Yöntem 1: Excel'deki TOPLAM sütununu ara
+    toplam_sutunlari = [c for c in u_df.columns if 'TOPLAM' in str(c).upper()]
+    if toplam_sutunlari:
+        try:
+            raw_val = row_s[toplam_sutunlari[0]]
+            if pd.notna(raw_val) and str(raw_val).strip() != "":
+                total_overtime_val = float(str(raw_val).replace(',', '.'))
+        except:
+            pass
+
+    # Yöntem 2: TOPLAM sütunu yoksa veya hatalıysa, TAKVİMDEKİ GÜNLERİ TEK TEK TOPLA! (SIFIR HATA)
+    if total_overtime_val == 0:
+        calc_total = 0
+        for t_col in t_cols:
+            dt_obj, _, _ = filyos_date_engine(t_col)
+            # Eğer Şubat mesailerini gizliyorsak, toplama da dahil ETMEYELİM (Sadece Mart ve sonrası görünsün diye)
+            # İsteğe bağlı olarak bunu değiştirebiliriz. Ben Mart sonrası için olanları topluyorum:
+            is_february = (dt_obj is not None and dt_obj.month == 2)
+            
+            m_val = str(row_s.get(t_col, "")).strip()
+            if not is_february and m_val not in ["", "0", "0.0", "nan", "None"]:
+                try:
+                    calc_total += float(m_val.replace(',', '.'))
+                except:
+                    pass
+        total_overtime_val = calc_total
+
+    # Formatlama: Virgülsüz tam sayıysa (18.0) direkt 18 yaz, küsüratlıysa aynen bırak
+    toplam_mesai_gosterim = f"{int(total_overtime_val)}" if total_overtime_val % 1 == 0 else f"{total_overtime_val}"
+
     st.write("")
     c1, c2, c3 = st.columns(3)
     with c1: st.metric(L['paid_days'], row_g.get("Personele Ödenecek Gün", 0))
     with c2: st.metric(L['phys_days'], row_g.get("Fiziki Çalışılan Gün", 0))
-    with c3: st.metric(L['total_over'], row_s.get("TOPLAM", 0)) # Metin "TOPLAM MESAİ SAATİ" olarak yukarıdan güncellendi.
+    with c3: st.metric(L['total_over'], toplam_mesai_gosterim)
 
     st.write("---")
 
     with st.expander(f"ℹ️ {L['legend']}"):
         for k, v in STATUS_MAP.items(): st.markdown(f"**{k}:** {v}")
 
-    t_cols = [c for c in df.columns if '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
     for h_no, i in enumerate(range(0, len(t_cols), 7), 1):
         hafta = t_cols[i:i+7]
         with st.expander(f"📁 {L['week']} {h_no} {L['week_suffix']}"):
@@ -288,7 +309,7 @@ else:
                 dt_obj, day_label, g_adi = filyos_date_engine(t_col)
                 cls = get_status_class(durum)
 
-                # 🚀 ŞUBAT AYI MESAI GIZLEME MANTIĞI & TEMİZ ETİKET
+                # ŞUBAT AYI MESAI GIZLEME MANTIĞI & TEMİZ ETİKET (V31 MANTIĞI)
                 is_february = (dt_obj is not None and dt_obj.month == 2)
                 mesai_html = ""
                 if not is_february and mesai not in ["0", "0.0", "nan", "", "None"]:
