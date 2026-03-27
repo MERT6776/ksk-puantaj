@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ (İTİRAZ AÇIKLAMASI EKLENDİ)
+# 2. DİL VE VERİ SÖZLÜĞÜ (İTİRAZ METNİ KISALTILDI VE NETLEŞTİRİLDİ)
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler",
@@ -14,7 +14,7 @@ LANGS = {
         "pass": "DOĞUM YILI", "login": "GİRİŞ YAP", "paid_days": "Ödenecek Gün",
         "phys_days": "Fiziki Gün", "total_over": "TOPLAM MESAİ SAATİ", "week": "HAFTA",
         "week_suffix": "PUANTAJ DURUM TAKVİMİ", "appeal_head": "İtiraz Merkezi",
-        "appeal_desc": "⚠️ Lütfen Dikkat: Puantaj veya mesai kayıtlarınızda maddi bir hata veya eksiklik olduğunu düşünüyorsanız, aşağıdaki formu doldurarak resmi inceleme talebinde bulunabilirsiniz.",
+        "appeal_desc": "⚠️ Lütfen Dikkat: Puantaj veya mesai kayıtlarınızda eksiklik/hata olduğunu düşünüyorsanız, aşağıdaki formu doldurarak itirazınızı iletebilirsiniz.",
         "send": "ALİCAN BAYAT'A GÖNDER", "lang": "Dil Seçimi", "note": "Ek Notunuz",
         "legend": "KISALTMALAR VE ANLAMLARI", "shift_end": "Mesai Tamamlandı",
         "theme": "Tema Seçimi", "month_title": "PUANTAJI", "overtime": "SAAT",
@@ -28,7 +28,7 @@ LANGS = {
         "pass": "BIRTH YEAR", "login": "LOGIN", "paid_days": "Paid Days",
         "phys_days": "Physical Days", "total_over": "TOTAL OVERTIME HOURS", "week": "WEEK",
         "week_suffix": "STATUS TABLE", "appeal_head": "Appeal Center",
-        "appeal_desc": "⚠️ Attention: If you believe there is a material error or omission in your payroll or overtime records, you can request an official review by filling out the form below.",
+        "appeal_desc": "⚠️ Attention: If you believe there is an error or omission in your payroll or overtime records, you can submit your objection by filling out the form below.",
         "send": "SEND", "lang": "Language", "note": "Note",
         "legend": "LEGEND", "shift_end": "Shift Completed",
         "theme": "Theme", "month_title": "PAYROLL", "overtime": "HRS",
@@ -42,7 +42,7 @@ LANGS = {
         "pass": "TUG'ILGAN YILI", "login": "KIRISH", "paid_days": "To'lanadigan Kun",
         "phys_days": "Ishlagan Kun", "total_over": "UMUMIY ISH SOATI", "week": "HAFTA",
         "week_suffix": "PUANTAJ JADVALI", "appeal_head": "E'tiroz Markazi",
-        "appeal_desc": "⚠️ Diqqat: Agar ish vaqti yoki qo'shimcha soatlar yozuvlarida xatolik yoki kamchilik bor deb hisoblasangiz, quyidagi shaklni to'ldirish orqali rasmiy tekshiruv talab qilishingiz mumkin.",
+        "appeal_desc": "⚠️ Diqqat: Ish vaqti yoki qo'shimcha soatlar yozuvlarida xatolik bor deb hisoblasangiz, quyidagi shaklni to'ldirib e'tirozingizni yuborishingiz mumkin.",
         "send": "YUBORISH", "lang": "Til", "note": "Eslatma",
         "legend": "QISQARTMALAR", "shift_end": "Ish yakunlandi",
         "theme": "Mavzu", "month_title": "PUANTAJI", "overtime": "SOAT",
@@ -61,25 +61,24 @@ STATUS_MAP = {
 AYLAR_TR = {1: "OCAK", 2: "ŞUBAT", 3: "MART", 4: "NİSAN", 5: "MAYIS", 6: "HAZİRAN", 7: "TEMMUZ", 8: "AĞUSTOS", 9: "EYLÜL", 10: "EKİM", 11: "KASIM", 12: "ARALIK"}
 GUNLER_TR = ["PZT", "SALI", "ÇAR", "PER", "CUMA", "CMT", "PAZ"]
 
-# TEMA RENKLERİ VE BUTON YAZI RENKLERİ (btn_text) ÖZEL OLARAK AYARLANDI!
 THEMES = {
     "Kurumsal Koyu": {
         "bg_grad_1": "#111827", "bg_grad_2": "#1e293b", "card_bg": "rgba(255,255,255,0.08)",
         "card_border": "rgba(255,255,255,0.16)", "text_main": "#ffffff", "text_soft": "#cbd5e1",
-        "accent": "#38bdf8", "accent_2": "#f59e0b", "clock": "#ffd700", "input_bg": "rgba(255,255,255,0.06)",
-        "input_text": "#ffffff", "btn_text": "#ffffff", "shadow": "0 10px 30px rgba(0,0,0,0.30)", "overlay": "rgba(2, 6, 23, 0.82)"
+        "accent": "#38bdf8", "accent_2": "#f59e0b", "clock": "#ffd700", "input_bg": "rgba(15,23,42,0.8)",
+        "input_text": "#ffffff", "shadow": "0 10px 30px rgba(0,0,0,0.30)", "overlay": "rgba(2, 6, 23, 0.82)"
     },
     "Açık Kurumsal": {
         "bg_grad_1": "#f8fafc", "bg_grad_2": "#e2e8f0", "card_bg": "rgba(255,255,255,0.92)",
         "card_border": "rgba(15,23,42,0.15)", "text_main": "#0f172a", "text_soft": "#334155",
         "accent": "#1d4ed8", "accent_2": "#b45309", "clock": "#0f172a", "input_bg": "#ffffff",
-        "input_text": "#0f172a", "btn_text": "#ffffff", "shadow": "0 10px 25px rgba(15,23,42,0.08)", "overlay": "rgba(255,255,255,0.60)"
+        "input_text": "#0f172a", "shadow": "0 10px 25px rgba(15,23,42,0.08)", "overlay": "rgba(255,255,255,0.60)"
     },
     "Premium Cam": {
         "bg_grad_1": "#0f172a", "bg_grad_2": "#1e1b4b", "card_bg": "rgba(255,255,255,0.10)",
         "card_border": "rgba(255,255,255,0.18)", "text_main": "#ffffff", "text_soft": "#dbeafe",
-        "accent": "#60a5fa", "accent_2": "#fbbf24", "clock": "#60a5fa", "input_bg": "rgba(255,255,255,0.08)",
-        "input_text": "#ffffff", "btn_text": "#0f172a", "shadow": "0 15px 40px rgba(0,0,0,0.35)", "overlay": "rgba(3, 7, 18, 0.72)"
+        "accent": "#60a5fa", "accent_2": "#fbbf24", "clock": "#60a5fa", "input_bg": "rgba(15,23,42,0.8)",
+        "input_text": "#ffffff", "shadow": "0 15px 40px rgba(0,0,0,0.35)", "overlay": "rgba(3, 7, 18, 0.72)"
     }
 }
 
@@ -97,7 +96,7 @@ curr_decimal = now_tr.hour + now_tr.minute / 60
 shift_pct = max(0, min(100, (curr_decimal - start_hour) / (end_hour - start_hour) * 100))
 ay_baslik = f"{AYLAR_TR[now_tr.month]} {now_tr.year} {L['month_title']}"
 
-# 3. CSS / TEMA
+# 3. CSS / TEMA (GÖRÜNÜRLÜK SORUNLARI ÇÖZÜLDÜ)
 st.markdown(f"""
     <style>
     .stApp {{ background: linear-gradient(135deg, {T["bg_grad_1"]} 0%, {T["bg_grad_2"]} 100%) !important; color: {T["text_main"]} !important; }}
@@ -153,20 +152,22 @@ st.markdown(f"""
     .status-ui {{ background: linear-gradient(135deg, #4b5563, #374151); border: 1px solid #9ca3af; }}
     .status-default {{ background: linear-gradient(135deg, #334155, #1e293b); border: 1px solid #64748b; }}
     
-    /* GİRDİ VE DROPDOWN DÜZELTMELERİ (Yazılar kaybolmasın diye zorlandı) */
-    .stTextInput > div > div > input, .stTextArea textarea, div[data-baseweb="select"] > div {{ 
-        background: {T["input_bg"]} !important; color: {T["input_text"]} !important; 
-        border: 1px solid {T["card_border"]} !important; border-radius: 12px !important; 
+    /* GİRDİ KUTULARI (BEYAZ TEMA BEYAZ YAZI HATASI ÇÖZÜLDÜ) */
+    .stTextInput > div > div > input, .stTextArea textarea, .stSelectbox > div > div {{ 
+        background-color: {T["input_bg"]} !important; 
+        color: {T["input_text"]} !important; 
+        border: 2px solid {T["card_border"]} !important; 
+        border-radius: 12px !important; 
     }}
     .stTextInput label, .stTextArea label, .stSelectbox label {{ color: {T["text_soft"]} !important; font-weight: 700 !important; }}
-    .stSelectbox span {{ color: {T["input_text"]} !important; }} 
     
-    /* BUTONLARIN YAZI RENGİ TEMA SÖZLÜĞÜNDEN ALINIR (HAYALET YAZIYA SON!) */
+    /* BUTONLARIN YAZISI HER ZAMAN KOYU LACİVERT/SİYAH (KABAK GİBİ OKUNACAK) */
     .stButton > button, .stLinkButton > a {{ 
         width: 100%; border-radius: 12px !important; border: none !important; 
         font-weight: 900 !important; min-height: 46px; 
         background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}) !important; 
-        color: {T["btn_text"]} !important; 
+        color: #0f172a !important; /* Açık arka planda en iyi görünen renk */
+        text-shadow: none !important;
         box-shadow: 0 10px 22px rgba(0,0,0,0.18); 
     }}
     
@@ -324,9 +325,6 @@ else:
     else:
         st.success(f"✅ {L['shift_end']}")
 
-    # ========================================================
-    # 🚀 TARİH MOTORU (SÜPER GÜVENLİ)
-    # ========================================================
     t_cols = [c for c in df.columns if isinstance(c, (datetime, pd.Timestamp)) or '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
     
     date_mapping = {}
@@ -400,7 +398,7 @@ else:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.subheader(f"🚨 {L['appeal_head']}")
     
-    # 📌 RESMİ İTİRAZ METNİ BURADA!
+    # 📌 KISA, NET VE CİDDİ İTİRAZ METNİ
     st.markdown(f'<p style="font-size:14px; font-weight:600; color:{T["text_soft"]}; margin-bottom:15px;"><i>{L["appeal_desc"]}</i></p>', unsafe_allow_html=True)
     
     konu = st.selectbox("Konu", ["...", "Puantaj İtirazı", "Mesai İtirazı", "Diğer"], label_visibility="collapsed")
