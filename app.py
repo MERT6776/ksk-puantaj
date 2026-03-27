@@ -99,7 +99,7 @@ st.markdown("""
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Mekanik Flipper Rakamları (Havalimanı Takvimi) */
+    /* Mekanik Flipper Rakamları */
     .flipper-text {
         font-family: 'Courier New', Courier, monospace;
         font-size: 34px;
@@ -145,7 +145,7 @@ st.markdown("""
         display: block !important;
     }
     
-    /* Şifre Input Odaklama (Lazer Çizgi Hissiyatı) */
+    /* Şifre Input Odaklama */
     .stTextInput>div>div>input {
         background-color: rgba(0,0,0,0.5) !important;
         color: white !important;
@@ -182,7 +182,6 @@ if 'user_data' not in st.session_state:
 @st.cache_data
 def load_data():
     try:
-        # Excel okuma kısmı DÜZELTİLDİ: Sayfa adı ne olursa olsun okur.
         return pd.read_excel("veri.xlsx")
     except:
         return None
@@ -198,15 +197,16 @@ if not st.session_state['logged_in']:
     st.markdown(f"<div class='sub-title'>{t['subtitle']}</div>", unsafe_allow_html=True)
     
     st.markdown('<div class="dark-card">', unsafe_allow_html=True)
-    sicil_input = st.text_input(t['sicil'], placeholder="Örn: 1100XXX")
-    sifre_input = st.text_input(t['sifre'], type="password", placeholder="Örn: 1990")
+    sicil_input = st.text_input(t['sicil'], placeholder="Örn: 533707")
+    sifre_input = st.text_input(t['sifre'], type="password", placeholder="Örn: 1993")
     st.write(" ")
     giris_basildi = st.button(t['login_btn'])
     st.markdown('</div>', unsafe_allow_html=True)
 
     if giris_basildi:
         if df is not None:
-            sonuc = df[(df['FİORİ PERSONEL NO'].astype(str) == sicil_input) & (df['DOĞUM TARİHİ'].astype(str) == sifre_input)]
+            # EXCEL BAŞLIKLARI BİREBİR EŞLEŞTİRİLDİ:
+            sonuc = df[(df['FİORİ NO'].astype(str) == sicil_input) & (df['DOĞUM YILI'].astype(str) == sifre_input)]
             if not sonuc.empty:
                 ilerleme = st.progress(0, text=t['yukleniyor'])
                 for percent in range(100):
@@ -224,29 +224,45 @@ if not st.session_state['logged_in']:
 else:
     kisi = st.session_state['user_data']
 
+    # GÜVENLİK SİGORTASI: Eğer Excel'de bu sütunlar yoksa sistem çökmesin diye 0 veya boş değer atıyoruz.
+    ad_soyad = kisi.get('AD SOYAD', 'İsim Bulunamadı')
+    gorevi = kisi.get('GÖREVİ', 'Görev Bulunamadı')
+    fiori_no = kisi.get('FİORİ NO', '-')
+    
+    odenecek_gun = kisi.get('Personele Ödenecek Gün', 0)
+    fiziki_gun = kisi.get('Fiziki Çalışılan Gün', 0)
+    sgk_gun = kisi.get('SGK Ödenecek Gün', 0)
+
     st.markdown('<div class="dark-card" style="animation-delay: 0s;">', unsafe_allow_html=True)
-    st.markdown(f"### 👋 {t['welcome']}, {kisi['ADI SOYADI']}")
-    st.caption(f"📂 {t['gorev']} | Sicil: {kisi['FİORİ PERSONEL NO']}")
+    st.markdown(f"### 👋 {t['welcome']}, {ad_soyad}")
+    st.caption(f"📂 {gorevi} | Sicil: {fiori_no}")
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="dark-card" style="animation-delay: 0.1s;">', unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     with c1:
         st.caption(t['odenecek'])
-        st.markdown(f"<div class='flipper-text'>{kisi['Personele Ödenecek Gün']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='flipper-text'>{odenecek_gun}</div>", unsafe_allow_html=True)
     with c2:
         st.caption(t['fiziki'])
-        st.markdown(f"<div class='flipper-text'>{kisi['Fiziki Çalışılan Gün']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='flipper-text'>{fiziki_gun}</div>", unsafe_allow_html=True)
     with c3:
         st.caption(t['sgk'])
-        st.markdown(f"<div class='flipper-text'>{kisi['SGK Ödenecek Gün']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='flipper-text'>{sgk_gun}</div>", unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="dark-card" style="animation-delay: 0.2s;">', unsafe_allow_html=True)
     st.markdown(f"#### 🧮 {t['hesap_baslik']}")
     yevmiye = st.number_input(t['yevmiye'], min_value=0, step=100)
+    
+    # Hesaplama bölümü güvenlik sigortası
+    try:
+        odn_sayi = float(odenecek_gun)
+    except:
+        odn_sayi = 0
+
     if yevmiye > 0:
-        toplam_maas = yevmiye * kisi['Personele Ödenecek Gün']
+        toplam_maas = yevmiye * odn_sayi
         st.success(f"💸 **{t['tahmini']}:** {toplam_maas:,.2f} ₺")
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -257,7 +273,7 @@ else:
     itiraz_konusu = st.selectbox(t['konu_sec'], t['konular'])
     
     admin_no = "905459157444" 
-    mesaj_metni = f"DİJİTAL OFİS BİLDİRİMİ\nPersonel: {kisi['ADI SOYADI']}\nSicil: {kisi['FİORİ PERSONEL NO']}\nKonu: {itiraz_konusu}\n\nMert Bey merhaba, yukarıda belirttiğim konu hakkında puantaj kayıtlarımla ilgili kontrol talep ediyorum."
+    mesaj_metni = f"DİJİTAL OFİS BİLDİRİMİ\nPersonel: {ad_soyad}\nSicil: {fiori_no}\nKonu: {itiraz_konusu}\n\nMert Bey merhaba, yukarıda belirttiğim konu hakkında puantaj kayıtlarımla ilgili kontrol talep ediyorum."
     encoded_mesaj = urllib.parse.quote(mesaj_metni)
     wp_link = f"https://wa.me/{admin_no}?text={encoded_mesaj}"
     
