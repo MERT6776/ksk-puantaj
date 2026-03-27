@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ (TAMAMEN DİNAMİK)
+# 2. DİL VE VERİ SÖZLÜĞÜ
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler", 
@@ -27,7 +27,7 @@ GUNLER_TR = ["PZT", "SALI", "ÇAR", "PER", "CUMA", "CMT", "PAZ"]
 if 'lang' not in st.session_state: st.session_state['lang'] = "TR"
 L = LANGS[st.session_state['lang']]
 
-# Türkiye Saati ve Vardiya
+# Türkiye Saati ve Vardiya (08:00 - 18:00)
 now_tr = datetime.utcnow() + timedelta(hours=3)
 clock_init = now_tr.strftime("%d.%m.%Y | %H:%M:%S")
 start_hour, end_hour = 8, 18
@@ -100,7 +100,7 @@ st.markdown(f"""
     </script>
     """, unsafe_allow_html=True)
 
-# 4. VERİ MOTORU VE TARİH AYRIŞTIRICI
+# 4. VERİ MOTORU
 @st.cache_data
 def load_data():
     try:
@@ -109,15 +109,25 @@ def load_data():
         return df
     except: return None
 
-def parse_filyos_date(date_str):
-    """Excel'deki 01.03.2026 formatını çelik gibi çözer."""
+# 🚀 TARİHİ ELLE PARÇALAYAN ÇELİK MOTOR
+def filyos_date_fixer(t_col):
     try:
-        # Noktalara ayırıp tersten (Yıl, Ay, Gün) tarih objesi yapıyoruz
-        parts = str(date_str).split('.')
-        if len(parts) == 3:
-            return datetime(int(parts[2]), int(parts[1]), int(parts[0]))
-        return pd.to_datetime(date_str, dayfirst=True)
-    except: return None
+        # Excel'deki 01.03.2026'yı noktadan bölüyoruz
+        parts = str(t_col).split('.')
+        if len(parts) >= 2:
+            gun = parts[0].zfill(2)
+            ay_num = int(parts[1])
+            ay_isim = AYLAR_TR[ay_num]
+            
+            # Gün ismini bulmak için Python tarihine çeviriyoruz (Güvenli yöntem)
+            yil = int(parts[2]) if len(parts) == 3 else 2026
+            dt_obj = datetime(yil, ay_num, int(gun))
+            gun_ismi = GUNLER_TR[dt_obj.weekday()]
+            
+            return f"{gun} {ay_isim}", gun_ismi
+        return str(t_col), ""
+    except:
+        return str(t_col), ""
 
 df = load_data()
 
@@ -173,13 +183,8 @@ else:
                 durum = str(row_g[t_col]).strip().upper()
                 mesai = str(row_s[t_col]).strip()
                 
-                # ÇELİK GİBİ TARİH ÇÖZÜCÜ
-                dt = parse_filyos_date(t_col)
-                if dt:
-                    day_label = f"{dt.day:02d} {AYLAR_TR[dt.month]}"
-                    g_adi = GUNLER_TR[dt.weekday()]
-                else:
-                    day_label = str(t_col); g_adi = ""
+                # 🛠️ TARİHİ ELLE ÇÖZÜYORUZ (Sürpriz Yok!)
+                day_label, g_adi = filyos_date_fixer(t_col)
 
                 cls = "status-n" if "N" in durum else "status-htc" if "HT" in durum else "status-hc" if "HÇ" in durum else "status-b"
                 mesai_html = f'<div style="background:#facc15; color:black; font-size:11px; padding:2px; border-radius:4px; margin-top:4px; font-weight:bold;">+{mesai}S</div>' if mesai not in ["0", "0.0", "nan", ""] else ""
