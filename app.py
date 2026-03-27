@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ (AYLAR VE GÜNLER KESİNLEŞTİ)
+# 2. DİL VE VERİ SÖZLÜĞÜ (MİLLİ FORMAT)
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler", 
@@ -64,7 +64,7 @@ st.markdown(f"""
 
     .user-header {{ font-size: 34px; font-weight: 900; color: white; margin-bottom: 0px; }}
     .user-sub {{ font-size: 20px; font-weight: 700; color: #ffd700; margin-bottom: 20px; }}
-    .paydos-label {{ font-size: 20px; font-weight: 800; color: #ffd700; margin-top: 10px; }}
+    .paydos-label {{ font-size: 20px; font-weight: 800; color: #ffd700; margin-top: 10px; text-transform: uppercase; }}
 
     .shift-container {{
         width: 100%; background: rgba(255, 255, 255, 0.1); border-radius: 12px;
@@ -85,7 +85,7 @@ st.markdown(f"""
     .stExpander {{
         background: rgba(40, 30, 20, 0.5) !important; border: 1px solid #b8860b !important;
         border-radius: 12px !important; border-left: 12px solid #b8860b !important;
-        margin-bottom: 15px !important;
+        margin-bottom: 12px !important;
     }}
 
     .day-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }}
@@ -96,10 +96,8 @@ st.markdown(f"""
     .status-hc {{ background: linear-gradient(135deg, #1d4ed8, #1e40af); border: 1px solid #60a5fa; }}
     .status-b {{ background: linear-gradient(135deg, #991b1b, #7f1d1d); border: 1px solid #f87171; }}
 
-    /* KISALTMA REHBERİ TASARIMI (STATİK) */
-    .legend-box {{ font-size: 13px; line-height: 1.6; color: #ddd; padding: 10px; }}
-    .legend-item {{ display: flex; align-items: center; margin-bottom: 4px; }}
-    .legend-tag {{ font-weight: 900; color: #ffd700; min-width: 40px; }}
+    .legend-box {{ font-size: 14px; line-height: 1.8; color: #eee; padding: 10px; }}
+    .legend-tag {{ font-weight: 900; color: #ffd700; margin-right: 10px; }}
 
     .mert-signature {{
         position: fixed; bottom: 12px; left: 15px; font-size: 14px; font-weight: 900;
@@ -108,7 +106,6 @@ st.markdown(f"""
 
     @media (max-width: 600px) {{
         .user-header {{ font-size: 26px; }}
-        .user-sub {{ font-size: 16px; }}
         #live-clock {{ font-size: 16px; }}
     }}
     </style>
@@ -138,7 +135,6 @@ st.markdown(f"""
 def load_data():
     try:
         df = pd.read_excel("veri.xlsx")
-        # Sütun isimlerini stringe çevir ve temizle
         df.columns = [str(c).strip() for c in df.columns]
         return df
     except: return None
@@ -155,7 +151,6 @@ if not st.session_state['logged_in']:
     sifre = st.text_input(L['pass'], type="password")
     if st.button(L['login']):
         if df is not None:
-            # Excel'deki sicil ve şifre ile kontrol
             res = df[(df['FİORİ NO'].astype(str) == sicil) & (df['DOĞUM YILI'].astype(str) == sifre)]
             if not res.empty: st.session_state['user_data'] = res; st.session_state['logged_in'] = True; st.rerun()
             else: st.error("❌ Bilgiler Hatalı!")
@@ -186,14 +181,12 @@ else:
 
     st.write("---")
     
-    # 📑 KISALTMA REHBERİ (STATİK - BİLGİ AMAÇLI)
+    # 📑 KISALTMALAR PANELİ (STATİK BİLGİ)
     with st.expander(f"ℹ️ {L['legend']}"):
-        st.markdown('<div class="legend-box">', unsafe_allow_html=True)
         for k, v in STATUS_MAP.items():
-            st.markdown(f'<div class="legend-item"><span class="legend-tag">{k}:</span> {v}</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown(f"**{k}:** {v}")
 
-    # 🗓️ DİNAMİK TARİH VE TAKVİM
+    # 🗓️ TARİH MOTORU VE TAKVİM (KESİN DÜZELTME)
     t_cols = [c for c in df.columns if '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
     for h_no, i in enumerate(range(0, len(t_cols), 7), 1):
         hafta = t_cols[i:i+7]
@@ -203,9 +196,8 @@ else:
                 durum = str(row_g[t_col]).strip().upper()
                 mesai = str(row_s[t_col]).strip()
                 
-                # MİLİMETRİK TARİH MOTORU (Excel'deki sütun ismine göre)
+                # GÜN-AY-YIL SIRALAMASINI ZORLA (dayfirst=True)
                 try:
-                    # Excel'deki 01.03.2026 formatını dayfirst=True ile net bir şekilde çözüyoruz
                     dt = pd.to_datetime(t_col, dayfirst=True)
                     m_name = AYLAR_TR[dt.month]
                     day_label = f"{dt.day:02d} {m_name}"
