@@ -6,10 +6,10 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ (İTİRAZ METNİ KISALTILDI VE NETLEŞTİRİLDİ)
+# 2. DİL VE VERİ SÖZLÜĞÜ (BAŞLIKLAR TAMAMEN RESMİLEŞTİ)
 LANGS = {
     "TR": {
-        "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler",
+        "title": "FİLYOS FAZ-2 İNSAN KAYNAKLARI PORTALI", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler",
         "welcome_evening": "İyi Akşamlar", "welcome_night": "İyi Geceler", "sicil": "KULLANICI ADI",
         "pass": "DOĞUM YILI", "login": "GİRİŞ YAP", "paid_days": "Ödenecek Gün",
         "phys_days": "Fiziki Gün", "total_over": "TOPLAM MESAİ SAATİ", "week": "HAFTA",
@@ -17,13 +17,13 @@ LANGS = {
         "appeal_desc": "⚠️ Lütfen Dikkat: Puantaj veya mesai kayıtlarınızda eksiklik/hata olduğunu düşünüyorsanız, aşağıdaki formu doldurarak itirazınızı iletebilirsiniz.",
         "send": "ALİCAN BAYAT'A GÖNDER", "lang": "Dil Seçimi", "note": "Ek Notunuz",
         "legend": "KISALTMALAR VE ANLAMLARI", "shift_end": "Mesai Tamamlandı",
-        "theme": "Tema Seçimi", "month_title": "PUANTAJI", "overtime": "SAAT",
+        "theme": "Tema Seçimi", "month_title": "PERSONEL PUANTAJI", "overtime": "SAAT",
         "logout": "ÇIKIŞ YAP", 
         "sys_note_title": "📌 SİSTEM BİLGİLENDİRMESİ", 
         "update_info": "Sisteme 22 Mart tarihine kadar olan puantaj ve mesai kayıtları işlenmiştir. Takip eden günlerin veri girişi devam etmektedir."
     },
     "EN": {
-        "title": "FILYOS PHASE-2", "welcome_morning": "Good Morning", "welcome_day": "Good Day",
+        "title": "FILYOS PHASE-2 HR PORTAL", "welcome_morning": "Good Morning", "welcome_day": "Good Day",
         "welcome_evening": "Good Evening", "welcome_night": "Good Night", "sicil": "USERNAME",
         "pass": "BIRTH YEAR", "login": "LOGIN", "paid_days": "Paid Days",
         "phys_days": "Physical Days", "total_over": "TOTAL OVERTIME HOURS", "week": "WEEK",
@@ -31,13 +31,13 @@ LANGS = {
         "appeal_desc": "⚠️ Attention: If you believe there is an error or omission in your payroll or overtime records, you can submit your objection by filling out the form below.",
         "send": "SEND", "lang": "Language", "note": "Note",
         "legend": "LEGEND", "shift_end": "Shift Completed",
-        "theme": "Theme", "month_title": "PAYROLL", "overtime": "HRS",
+        "theme": "Theme", "month_title": "PERSONNEL PAYROLL", "overtime": "HRS",
         "logout": "LOGOUT", 
         "sys_note_title": "📌 SYSTEM NOTICE", 
         "update_info": "Payroll and overtime records up to March 22 have been entered into the system. Data entry for subsequent days is ongoing."
     },
     "UZ": {
-        "title": "FİLYOS FAZ-2", "welcome_morning": "Xayrli tong", "welcome_day": "Xayrli kun",
+        "title": "FİLYOS FAZ-2 KADRLAR PORTALI", "welcome_morning": "Xayrli tong", "welcome_day": "Xayrli kun",
         "welcome_evening": "Xayrli kech", "welcome_night": "Xayrli tun", "sicil": "FOYDALANUVCHI NOMI",
         "pass": "TUG'ILGAN YILI", "login": "KIRISH", "paid_days": "To'lanadigan Kun",
         "phys_days": "Ishlagan Kun", "total_over": "UMUMIY ISH SOATI", "week": "HAFTA",
@@ -45,7 +45,7 @@ LANGS = {
         "appeal_desc": "⚠️ Diqqat: Ish vaqti yoki qo'shimcha soatlar yozuvlarida xatolik bor deb hisoblasangiz, quyidagi shaklni to'ldirib e'tirozingizni yuborishingiz mumkin.",
         "send": "YUBORISH", "lang": "Til", "note": "Eslatma",
         "legend": "QISQARTMALAR", "shift_end": "Ish yakunlandi",
-        "theme": "Mavzu", "month_title": "PUANTAJI", "overtime": "SOAT",
+        "theme": "Mavzu", "month_title": "XODIMLAR PUANTAJI", "overtime": "SOAT",
         "logout": "CHIQISH", 
         "sys_note_title": "📌 TIZIM MA'LUMOTI", 
         "update_info": "Tizimga 22-martgacha bo'lgan ish vaqti va qo'shimcha soatlar kiritilgan. Keyingi kunlar uchun ma'lumotlarni kiritish davom etmoqda."
@@ -94,9 +94,11 @@ clock_init = now_tr.strftime("%d.%m.%Y | %H:%M:%S")
 start_hour, end_hour = 8, 18
 curr_decimal = now_tr.hour + now_tr.minute / 60
 shift_pct = max(0, min(100, (curr_decimal - start_hour) / (end_hour - start_hour) * 100))
-ay_baslik = f"{AYLAR_TR[now_tr.month]} {now_tr.year} {L['month_title']}"
 
-# 3. CSS / TEMA (GÖRÜNÜRLÜK SORUNLARI ÇÖZÜLDÜ)
+# 🚀 "KSK MART 2026 PERSONEL PUANTAJI" FORMATINDA DİNAMİK BAŞLIK 
+ay_baslik = f"KSK {AYLAR_TR[now_tr.month]} {now_tr.year} {L['month_title']}"
+
+# 3. CSS / TEMA
 st.markdown(f"""
     <style>
     .stApp {{ background: linear-gradient(135deg, {T["bg_grad_1"]} 0%, {T["bg_grad_2"]} 100%) !important; color: {T["text_main"]} !important; }}
@@ -113,8 +115,10 @@ st.markdown(f"""
         text-shadow: 0 2px 4px rgba(0,0,0,0.2); 
     }}
     
-    .portal-title {{ text-align: center; color: {T["text_main"]}; letter-spacing: 3px; font-weight: 900; margin-bottom: 12px; }}
-    .month-title {{ text-align: center; color: {T["accent"]}; font-size: 18px; font-weight: 800; margin-top: -8px; margin-bottom: 18px; letter-spacing: 1px; }}
+    /* GÜNCELLENEN BAŞLIK BOYUTLARI (UZUN İSME GÖRE AYARLANDI) */
+    .portal-title {{ text-align: center; color: {T["text_main"]}; letter-spacing: 2px; font-weight: 900; margin-bottom: 10px; font-size: 28px; }}
+    .month-title {{ text-align: center; color: {T["accent"]}; font-size: 20px; font-weight: 900; margin-top: -5px; margin-bottom: 22px; letter-spacing: 1.5px; }}
+    
     .user-header {{ font-size: 32px; font-weight: 900; color: {T["text_main"]}; margin-bottom: 6px; }}
     .user-sub {{ font-size: 18px; font-weight: 700; color: {T["text_soft"]}; margin-bottom: 18px; }}
     .paydos-label {{ font-size: 18px; font-weight: 800; color: {T["accent_2"]}; margin-top: 8px; text-transform: uppercase; }}
@@ -152,7 +156,6 @@ st.markdown(f"""
     .status-ui {{ background: linear-gradient(135deg, #4b5563, #374151); border: 1px solid #9ca3af; }}
     .status-default {{ background: linear-gradient(135deg, #334155, #1e293b); border: 1px solid #64748b; }}
     
-    /* GİRDİ KUTULARI (BEYAZ TEMA BEYAZ YAZI HATASI ÇÖZÜLDÜ) */
     .stTextInput > div > div > input, .stTextArea textarea, .stSelectbox > div > div {{ 
         background-color: {T["input_bg"]} !important; 
         color: {T["input_text"]} !important; 
@@ -161,14 +164,11 @@ st.markdown(f"""
     }}
     .stTextInput label, .stTextArea label, .stSelectbox label {{ color: {T["text_soft"]} !important; font-weight: 700 !important; }}
     
-    /* BUTONLARIN YAZISI HER ZAMAN KOYU LACİVERT/SİYAH (KABAK GİBİ OKUNACAK) */
     .stButton > button, .stLinkButton > a {{ 
         width: 100%; border-radius: 12px !important; border: none !important; 
         font-weight: 900 !important; min-height: 46px; 
         background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}) !important; 
-        color: #0f172a !important; /* Açık arka planda en iyi görünen renk */
-        text-shadow: none !important;
-        box-shadow: 0 10px 22px rgba(0,0,0,0.18); 
+        color: #0f172a !important; text-shadow: none !important; box-shadow: 0 10px 22px rgba(0,0,0,0.18); 
     }}
     
     .info-banner {{ background-color: rgba(234, 179, 8, 0.15); border-left: 6px solid #eab308; padding: 16px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
@@ -176,7 +176,14 @@ st.markdown(f"""
     .info-text {{ margin: 6px 0 0 0; font-size: 14px; font-weight: 600; color: {T["text_main"]}; opacity: 0.9; }}
 
     .mert-signature {{ position: fixed; bottom: 12px; left: 15px; font-size: 13px; font-weight: 900; color: {T["text_soft"]}; opacity: 0.8; letter-spacing: 2px; z-index: 1000; }}
-    @media (max-width: 600px) {{ .user-header {{ font-size: 25px; }} #live-clock {{ font-size: 16px; }} .day-grid {{ grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 8px; }} .day-item {{ min-height: 80px; padding: 4px 2px; }} }}
+    @media (max-width: 600px) {{ 
+        .portal-title {{ font-size: 22px; }}
+        .month-title {{ font-size: 16px; }}
+        .user-header {{ font-size: 25px; }} 
+        #live-clock {{ font-size: 16px; }} 
+        .day-grid {{ grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 8px; }} 
+        .day-item {{ min-height: 80px; padding: 4px 2px; }} 
+    }}
     </style>
     
     <div id="live-clock">{clock_init}</div>
@@ -311,7 +318,6 @@ else:
     st.markdown(f'<div class="user-header">{greet_txt}, {row_g["AD SOYAD"]} 👷‍♂️</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="user-sub">{row_g["GÖREVİ"]} | {row_g["FİORİ NO"]}</div>', unsafe_allow_html=True)
     
-    # 📌 RESMİ SİSTEM BİLGİLENDİRMESİ
     st.markdown(f"""
         <div class="info-banner">
             <h4 class="info-title">{L['sys_note_title']}</h4>
@@ -398,7 +404,6 @@ else:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.subheader(f"🚨 {L['appeal_head']}")
     
-    # 📌 KISA, NET VE CİDDİ İTİRAZ METNİ
     st.markdown(f'<p style="font-size:14px; font-weight:600; color:{T["text_soft"]}; margin-bottom:15px;"><i>{L["appeal_desc"]}</i></p>', unsafe_allow_html=True)
     
     konu = st.selectbox("Konu", ["...", "Puantaj İtirazı", "Mesai İtirazı", "Diğer"], label_visibility="collapsed")
