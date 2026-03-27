@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ (FİORİ -> KULLANICI ADI)
+# 2. DİL VE VERİ SÖZLÜĞÜ (KULLANICI ADI GÜNCELLENDİ)
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler", 
@@ -29,7 +29,7 @@ if 'lang' not in st.session_state: st.session_state['lang'] = "TR"
 if 'filter_status' not in st.session_state: st.session_state['filter_status'] = None
 L = LANGS[st.session_state['lang']]
 
-# 3. EXECUTIVE CSS & JS (GÜÇLÜ CANLI SAAT VE ZARİF İMZA)
+# 3. EXECUTIVE CSS & JS (SAAT FİX VE ZARİF İMZA)
 st.markdown(f"""
     <style>
     .stApp {{ background: transparent !important; }}
@@ -42,11 +42,11 @@ st.markdown(f"""
         background: rgba(5, 10, 20, 0.85); z-index: -1; backdrop-filter: brightness(1.1) saturate(1.4);
     }}
 
-    /* CANLI SAAT TASARIMI - GOLD & DIGITAL */
+    /* CANLI SAAT TASARIMI */
     .clock-container {{
-        text-align: right; color: #ffd700; font-family: 'Courier New', Courier, monospace;
+        text-align: right; color: #ffd700; font-family: 'Courier New', monospace;
         font-weight: 900; font-size: 16px; letter-spacing: 2px; margin-bottom: 10px;
-        text-shadow: 1px 1px 2px black;
+        text-shadow: 1px 1px 2px black; min-height: 24px;
     }}
 
     .glass-card {{
@@ -84,10 +84,12 @@ st.markdown(f"""
     }}
     </style>
 
-    <div class="clock-container" id="live-clock">BAĞLANIYOR...</div>
+    <div class="clock-container" id="live-clock"></div>
 
     <script>
     function updateClock() {{
+        const el = document.getElementById('live-clock');
+        if(!el) return;
         const now = new Date();
         const trTime = new Date(now.toLocaleString('en-US', {{ timeZone: 'Europe/Istanbul' }}));
         const day = String(trTime.getDate()).padStart(2, '0');
@@ -96,11 +98,10 @@ st.markdown(f"""
         const hours = String(trTime.getHours()).padStart(2, '0');
         const minutes = String(trTime.getMinutes()).padStart(2, '0');
         const seconds = String(trTime.getSeconds()).padStart(2, '0');
-        
-        document.getElementById('live-clock').innerText = day + "." + month + "." + year + " | " + hours + ":" + minutes + ":" + seconds;
+        el.innerText = day + "." + month + "." + year + " | " + hours + ":" + minutes + ":" + seconds;
     }}
     setInterval(updateClock, 1000);
-    updateClock();
+    updateClock(); // İlk açılışta anında çalıştır
     </script>
     """, unsafe_allow_html=True)
 
