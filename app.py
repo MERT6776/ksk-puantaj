@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ (KEYERROR HATASI DÜZELTİLDİ)
+# 2. DİL VE VERİ SÖZLÜĞÜ (İTİRAZ AÇIKLAMASI EKLENDİ)
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler",
@@ -14,6 +14,7 @@ LANGS = {
         "pass": "DOĞUM YILI", "login": "GİRİŞ YAP", "paid_days": "Ödenecek Gün",
         "phys_days": "Fiziki Gün", "total_over": "TOPLAM MESAİ SAATİ", "week": "HAFTA",
         "week_suffix": "PUANTAJ DURUM TAKVİMİ", "appeal_head": "İtiraz Merkezi",
+        "appeal_desc": "⚠️ Lütfen Dikkat: Puantaj veya mesai kayıtlarınızda maddi bir hata veya eksiklik olduğunu düşünüyorsanız, aşağıdaki formu doldurarak resmi inceleme talebinde bulunabilirsiniz.",
         "send": "ALİCAN BAYAT'A GÖNDER", "lang": "Dil Seçimi", "note": "Ek Notunuz",
         "legend": "KISALTMALAR VE ANLAMLARI", "shift_end": "Mesai Tamamlandı",
         "theme": "Tema Seçimi", "month_title": "PUANTAJI", "overtime": "SAAT",
@@ -27,6 +28,7 @@ LANGS = {
         "pass": "BIRTH YEAR", "login": "LOGIN", "paid_days": "Paid Days",
         "phys_days": "Physical Days", "total_over": "TOTAL OVERTIME HOURS", "week": "WEEK",
         "week_suffix": "STATUS TABLE", "appeal_head": "Appeal Center",
+        "appeal_desc": "⚠️ Attention: If you believe there is a material error or omission in your payroll or overtime records, you can request an official review by filling out the form below.",
         "send": "SEND", "lang": "Language", "note": "Note",
         "legend": "LEGEND", "shift_end": "Shift Completed",
         "theme": "Theme", "month_title": "PAYROLL", "overtime": "HRS",
@@ -40,6 +42,7 @@ LANGS = {
         "pass": "TUG'ILGAN YILI", "login": "KIRISH", "paid_days": "To'lanadigan Kun",
         "phys_days": "Ishlagan Kun", "total_over": "UMUMIY ISH SOATI", "week": "HAFTA",
         "week_suffix": "PUANTAJ JADVALI", "appeal_head": "E'tiroz Markazi",
+        "appeal_desc": "⚠️ Diqqat: Agar ish vaqti yoki qo'shimcha soatlar yozuvlarida xatolik yoki kamchilik bor deb hisoblasangiz, quyidagi shaklni to'ldirish orqali rasmiy tekshiruv talab qilishingiz mumkin.",
         "send": "YUBORISH", "lang": "Til", "note": "Eslatma",
         "legend": "QISQARTMALAR", "shift_end": "Ish yakunlandi",
         "theme": "Mavzu", "month_title": "PUANTAJI", "overtime": "SOAT",
@@ -58,6 +61,7 @@ STATUS_MAP = {
 AYLAR_TR = {1: "OCAK", 2: "ŞUBAT", 3: "MART", 4: "NİSAN", 5: "MAYIS", 6: "HAZİRAN", 7: "TEMMUZ", 8: "AĞUSTOS", 9: "EYLÜL", 10: "EKİM", 11: "KASIM", 12: "ARALIK"}
 GUNLER_TR = ["PZT", "SALI", "ÇAR", "PER", "CUMA", "CMT", "PAZ"]
 
+# TEMA RENKLERİ VE BUTON YAZI RENKLERİ (btn_text) ÖZEL OLARAK AYARLANDI!
 THEMES = {
     "Kurumsal Koyu": {
         "bg_grad_1": "#111827", "bg_grad_2": "#1e293b", "card_bg": "rgba(255,255,255,0.08)",
@@ -75,7 +79,7 @@ THEMES = {
         "bg_grad_1": "#0f172a", "bg_grad_2": "#1e1b4b", "card_bg": "rgba(255,255,255,0.10)",
         "card_border": "rgba(255,255,255,0.18)", "text_main": "#ffffff", "text_soft": "#dbeafe",
         "accent": "#60a5fa", "accent_2": "#fbbf24", "clock": "#60a5fa", "input_bg": "rgba(255,255,255,0.08)",
-        "input_text": "#ffffff", "btn_text": "#ffffff", "shadow": "0 15px 40px rgba(0,0,0,0.35)", "overlay": "rgba(3, 7, 18, 0.72)"
+        "input_text": "#ffffff", "btn_text": "#0f172a", "shadow": "0 15px 40px rgba(0,0,0,0.35)", "overlay": "rgba(3, 7, 18, 0.72)"
     }
 }
 
@@ -149,9 +153,22 @@ st.markdown(f"""
     .status-ui {{ background: linear-gradient(135deg, #4b5563, #374151); border: 1px solid #9ca3af; }}
     .status-default {{ background: linear-gradient(135deg, #334155, #1e293b); border: 1px solid #64748b; }}
     
-    .stTextInput > div > div > input, .stTextArea textarea, .stSelectbox > div > div {{ background: {T["input_bg"]} !important; color: {T["input_text"]} !important; border: 1px solid {T["card_border"]} !important; border-radius: 12px !important; }}
+    /* GİRDİ VE DROPDOWN DÜZELTMELERİ (Yazılar kaybolmasın diye zorlandı) */
+    .stTextInput > div > div > input, .stTextArea textarea, div[data-baseweb="select"] > div {{ 
+        background: {T["input_bg"]} !important; color: {T["input_text"]} !important; 
+        border: 1px solid {T["card_border"]} !important; border-radius: 12px !important; 
+    }}
     .stTextInput label, .stTextArea label, .stSelectbox label {{ color: {T["text_soft"]} !important; font-weight: 700 !important; }}
-    .stButton > button, .stLinkButton > a {{ width: 100%; border-radius: 12px !important; border: none !important; font-weight: 800 !important; min-height: 46px; background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}) !important; color: #ffffff !important; box-shadow: 0 10px 22px rgba(0,0,0,0.18); }}
+    .stSelectbox span {{ color: {T["input_text"]} !important; }} 
+    
+    /* BUTONLARIN YAZI RENGİ TEMA SÖZLÜĞÜNDEN ALINIR (HAYALET YAZIYA SON!) */
+    .stButton > button, .stLinkButton > a {{ 
+        width: 100%; border-radius: 12px !important; border: none !important; 
+        font-weight: 900 !important; min-height: 46px; 
+        background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}) !important; 
+        color: {T["btn_text"]} !important; 
+        box-shadow: 0 10px 22px rgba(0,0,0,0.18); 
+    }}
     
     .info-banner {{ background-color: rgba(234, 179, 8, 0.15); border-left: 6px solid #eab308; padding: 16px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
     .info-title {{ margin: 0; color: #eab308; font-size: 16px; font-weight: 900; letter-spacing: 1px; }}
@@ -191,12 +208,9 @@ def load_data():
         return None
 
 def parse_date_super_safe(t_col, last_date=None):
-    """Excelden gelen veriyi (string veya datetime objesi) şaşmaz şekilde okur."""
-    # 1. Eğer veri doğrudan datetime objesiyse (00:00:00 hatasının sebebi buydu)
     if isinstance(t_col, (datetime, pd.Timestamp)):
         dt_obj = datetime(t_col.year, t_col.month, t_col.day)
     else:
-        # 2. Eğer veri metinse
         clean_str = str(t_col).split(' ')[0]
         dt_obj = None
         if '.' in clean_str:
@@ -210,20 +224,17 @@ def parse_date_super_safe(t_col, last_date=None):
             parts = clean_str.split('-')
             if len(parts) == 3:
                 try:
-                    if len(parts[0]) == 4: # Format YYYY-MM-DD
+                    if len(parts[0]) == 4:
                         dt_obj = datetime(int(parts[0]), int(parts[1]), int(parts[2]))
-                    else: # Format DD-MM-YYYY
+                    else:
                         dt_obj = datetime(int(parts[2]), int(parts[1]), int(parts[0]))
                 except: pass
-        
-        # 3. Son çare Pandas'a sor
         if dt_obj is None:
             try:
                 ts = pd.to_datetime(clean_str, dayfirst=True)
                 dt_obj = datetime(ts.year, ts.month, ts.day)
             except: pass
     
-    # KRONOLOJİ DÜZELTİCİSİ (Zaman Geriye Akmaz!)
     if dt_obj and last_date and dt_obj < last_date:
         try:
             dt_obj = datetime(dt_obj.year, dt_obj.day, dt_obj.month)
@@ -327,7 +338,6 @@ else:
             last_date = dt_obj
         date_mapping[t_col] = dt_obj
 
-    # SADECE GÖRÜNEN MESAİLERİ TOPLA (ŞUBAT HARİÇ)
     calc_total = 0
     for t_col in t_cols:
         dt_obj = date_mapping.get(t_col)
@@ -389,6 +399,10 @@ else:
 
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.subheader(f"🚨 {L['appeal_head']}")
+    
+    # 📌 RESMİ İTİRAZ METNİ BURADA!
+    st.markdown(f'<p style="font-size:14px; font-weight:600; color:{T["text_soft"]}; margin-bottom:15px;"><i>{L["appeal_desc"]}</i></p>', unsafe_allow_html=True)
+    
     konu = st.selectbox("Konu", ["...", "Puantaj İtirazı", "Mesai İtirazı", "Diğer"], label_visibility="collapsed")
     notunuz = st.text_area(L['note'])
     if st.button(L['send']):
