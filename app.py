@@ -7,7 +7,7 @@ from datetime import datetime
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. TEMA KONTROLÜ
+# 2. TEMA VE AYARLAR
 if 'theme' not in st.session_state: st.session_state['theme'] = "Gece"
 
 AYLAR_TR = {1: "OCAK", 2: "ŞUBAT", 3: "MART", 4: "NİSAN", 5: "MAYIS", 6: "HAZİRAN", 
@@ -21,51 +21,38 @@ with c_theme:
         st.session_state['theme'] = "Gündüz" if st.session_state['theme'] == "Gece" else "Gece"
         st.rerun()
 
-# 3. CSS (BAYRAK ARKADA - İÇERİK ÖNDE - İMZA SAĞ ALTTA)
+# 3. CSS (SOL ALT İMZA VE DETAYLI İTİRAZ PANELİ)
 if st.session_state['theme'] == "Gece":
-    overlay_color = "rgba(10, 15, 25, 0.85)"
+    overlay_color = "rgba(10, 15, 25, 0.88)"
     text_color = "#ffffff"
     card_bg = "rgba(255, 255, 255, 0.08)"
 else:
-    overlay_color = "rgba(240, 245, 250, 0.85)"
+    overlay_color = "rgba(240, 245, 250, 0.88)"
     text_color = "#1e293b"
     card_bg = "rgba(0, 0, 0, 0.05)"
 
 st.markdown(f"""
     <style>
-    /* 🇹🇷 BAYRAK VE PARLAKLIK AYARI */
     .stApp {{
         background-image: url("https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg") !important;
         background-size: cover !important;
         background-position: center !important;
         background-attachment: fixed !important;
     }}
-    
-    /* İçeriğin Bayrağın Üstünde Kalmasını Sağlayan Katman */
     [data-testid="stAppViewContainer"] {{
         background-color: {overlay_color} !important;
         backdrop-filter: brightness(1.2) saturate(1.3);
     }}
-
     .dark-card {{
-        background: {card_bg};
-        backdrop-filter: blur(15px);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 25px;
-        margin-bottom: 20px;
-        color: {text_color};
+        background: {card_bg}; backdrop-filter: blur(20px);
+        border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 25px; margin-bottom: 20px; color: {text_color};
     }}
-
     .flipper-box {{
         background: {("linear-gradient(145deg, #1e293b, #0f172a)" if st.session_state['theme'] == "Gece" else "#ffffff")};
-        border-radius: 12px;
-        padding: 15px;
-        text-align: center;
-        border: 1px solid #475569;
+        border-radius: 12px; padding: 15px; text-align: center; border: 1px solid #475569;
     }}
     .flipper-val {{ font-size: 32px; font-weight: 900; color: {("#facc15" if st.session_state['theme'] == "Gece" else "#1e40af")}; }}
-
     .day-box {{
         display: flex; align-items: center; justify-content: center;
         width: 100%; aspect-ratio: 1/1; border-radius: 10px; font-weight: 900; font-size: 18px; color: white;
@@ -75,21 +62,25 @@ st.markdown(f"""
     .status-hc {{ background: #1d4ed8; border: 2px solid #60a5fa; }}
     .status-b {{ background: #991b1b; border: 2px solid #f87171; }}
     .status-old {{ background: #475569; opacity: 0.5; }}
-
-    .mesai-tag {{ background: #facc15; color: black; padding: 2px 4px; border-radius: 4px; font-size: 10px; margin-top: 3px; font-weight: bold; }}
-    .date-label {{ font-size: 9px; font-weight: 800; color: {text_color}; text-transform: uppercase; margin-top: 2px; }}
-
-    /* ✒️ SAĞ ALT İMZA */
+    
+    /* ✒️ SOL ALT İMZA - BÜYÜTÜLDÜ */
     .mert-footer {{
         position: fixed;
-        bottom: 10px;
-        right: 20px;
-        font-size: 11px;
+        bottom: 15px;
+        left: 20px;
+        font-size: 16px;
         font-weight: 900;
         color: {text_color};
-        opacity: 0.7;
-        letter-spacing: 1px;
+        opacity: 0.8;
+        letter-spacing: 2px;
         z-index: 999;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }}
+
+    .stLinkButton>a {{
+        background: linear-gradient(90deg, #b91c1c 0%, #dc2626 100%) !important;
+        border: 1px solid #ef4444 !important; border-radius: 50px !important;
+        font-weight: 900 !important; color: white !important;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -167,13 +158,38 @@ else:
                         st.markdown(f'<div class="day-box {cls}">{durum}</div>', unsafe_allow_html=True)
                         if mesai not in ["0", "0.0", "nan", ""]:
                             st.markdown(f'<div class="mesai-tag">+{mesai} S</div>', unsafe_allow_html=True)
-                    st.markdown(f'<div class="date-label">{g_adi}<br>{label}</div>', unsafe_allow_html=True)
+                    st.caption(f"{g_adi} {label}")
 
+    # --- DETAYLI İTİRAZ PANELİ ---
+    st.markdown('<div class="dark-card">', unsafe_allow_html=True)
+    st.subheader("🚨 İtiraz Merkezi")
+    
+    itiraz_konusu = st.selectbox("İtiraz Etmek İstediğiniz Konu:", 
+                                 ["Konu Seçiniz...", "Gün (Puantaj) İtirazı", "Mesai Saati İtirazı", "Maaş/Yevmiye Sorunu", "Diğer"])
+    
+    itiraz_detayi = ""
+    if itiraz_konusu in ["Gün (Puantaj) İtirazı", "Mesai Saati İtirazı"]:
+        secilen_gunler = st.multiselect("Hangi Günler İçin İtiraz Ediyorsunuz?", t_cols)
+        if secilen_gunler:
+            itiraz_detayi = "Seçilen Günler: " + ", ".join([str(g) for g in secilen_gunler])
+
+    ek_not = st.text_area("Varsa Ek Notunuz:", placeholder="Örn: O gün doktora gitmiştim...")
+    
+    alic_no = "905435314160"
+    mesaj_taslagi = f"PERSONEL İTİRAZ BİLDİRİMİ\n-------------------\nPersonel: {row_g['AD SOYAD']}\nSicil: {row_g['FİORİ NO']}\nKonu: {itiraz_konusu}\n{itiraz_detayi}\nNot: {ek_not}\n\nAlican Bey merhaba, yukarıda belirttiğim konu hakkında kontrol talep ediyorum."
+    
+    encoded_itiraz = urllib.parse.quote(mesaj_taslagi)
+    wa_itiraz_link = f"https://wa.me/{alic_no}?text={encoded_itiraz}"
+    
+    if itiraz_konusu != "Konu Seçiniz...":
+        st.link_button("📩 İTİRAZI ALİCAN BAYAT'A GÖNDER", wa_itiraz_link)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Maaş Panel
     st.markdown('<div class="dark-card">', unsafe_allow_html=True)
     yev = st.number_input("Günlük Yevmiye (₺)", min_value=0)
     if yev > 0: st.success(f"💰 Maaş: {yev * float(row_g.get('Personele Ödenecek Gün', 0)):,.2f} ₺")
     st.markdown('</div>', unsafe_allow_html=True)
-    st.link_button("🚨 İTİRAZ HATTI", "https://wa.me/905459157444")
 
-# SAĞ ALT İMZA
+# SOL ALT İMZA (BÜYÜTÜLDÜ)
 st.markdown('<div class="mert-footer">POWERED BY Mert DÜZCÜK</div>', unsafe_allow_html=True)
