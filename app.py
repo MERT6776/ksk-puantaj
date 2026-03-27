@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. DİL VE VERİ SÖZLÜĞÜ (BAŞLIKLAR TEMİZLENDİ)
+# 2. DİL VE VERİ SÖZLÜĞÜ
 LANGS = {
     "TR": {
         "title": "FİLYOS FAZ-2 PORTAL", "welcome_morning": "Günaydın", "welcome_day": "İyi Günler",
@@ -16,7 +16,7 @@ LANGS = {
         "week_suffix": "PUANTAJ DURUM TAKVİMİ", "appeal_head": "İtiraz Merkezi",
         "send": "ALİCAN BAYAT'A GÖNDER", "lang": "Dil Seçimi", "note": "Ek Notunuz",
         "legend": "KISALTMALAR VE ANLAMLARI", "shift_end": "Mesai Tamamlandı",
-        "theme": "Tema Seçimi", "month_title": "PUANTAJI", "overtime": "Saat Mesai"
+        "theme": "Tema Seçimi", "month_title": "PUANTAJI", "overtime": "SAAT"
     },
     "EN": {
         "title": "FILYOS PHASE-2", "welcome_morning": "Good Morning", "welcome_day": "Good Day",
@@ -26,7 +26,7 @@ LANGS = {
         "week_suffix": "STATUS TABLE", "appeal_head": "Appeal Center",
         "send": "SEND", "lang": "Language", "note": "Note",
         "legend": "LEGEND", "shift_end": "Shift Completed",
-        "theme": "Theme", "month_title": "PAYROLL", "overtime": "Hrs Overtime"
+        "theme": "Theme", "month_title": "PAYROLL", "overtime": "HRS"
     },
     "UZ": {
         "title": "FİLYOS FAZ-2", "welcome_morning": "Xayrli tong", "welcome_day": "Xayrli kun",
@@ -36,7 +36,7 @@ LANGS = {
         "week_suffix": "PUANTAJ JADVALI", "appeal_head": "E'tiroz Markazi",
         "send": "YUBORISH", "lang": "Til", "note": "Eslatma",
         "legend": "QISQARTMALAR", "shift_end": "Ish yakunlandi",
-        "theme": "Mavzu", "month_title": "PUANTAJI", "overtime": "Soat Ish"
+        "theme": "Mavzu", "month_title": "PUANTAJI", "overtime": "SOAT"
     }
 }
 
@@ -49,7 +49,6 @@ STATUS_MAP = {
 AYLAR_TR = {1: "OCAK", 2: "ŞUBAT", 3: "MART", 4: "NİSAN", 5: "MAYIS", 6: "HAZİRAN", 7: "TEMMUZ", 8: "AĞUSTOS", 9: "EYLÜL", 10: "EKİM", 11: "KASIM", 12: "ARALIK"}
 GUNLER_TR = ["PZT", "SALI", "ÇAR", "PER", "CUMA", "CMT", "PAZ"]
 
-# SADECE EN LÜKS VE UYUMLU TEMALAR
 THEMES = {
     "Kurumsal Koyu": {
         "bg_grad_1": "#111827", "bg_grad_2": "#1e293b", "card_bg": "rgba(255,255,255,0.08)",
@@ -96,15 +95,10 @@ st.markdown(f"""
     }}
     .block-container {{ padding-top: 1rem !important; padding-bottom: 2rem !important; max-width: 920px !important; }}
     
-    /* YUKARIDAKI CANLI SAAT TASARIMI (GARANTİLİ) */
-    #live-clock-container {{
-        width: 100%; text-align: right; padding-bottom: 10px; margin-top: -10px;
-    }}
     #live-clock {{ 
-        color: {T["clock"]}; font-family: 'Courier New', monospace; 
-        font-weight: 900; font-size: 20px; letter-spacing: 2px;
-        text-shadow: 0 2px 5px rgba(0,0,0,0.3); display: inline-block;
-        background: rgba(0,0,0,0.15); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+        text-align: right; color: {T["clock"]}; font-family: 'Courier New', monospace; 
+        font-weight: 900; font-size: 22px; letter-spacing: 1.5px; padding-bottom: 15px; 
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2); 
     }}
     
     .portal-title {{ text-align: center; color: {T["text_main"]}; letter-spacing: 3px; font-weight: 900; margin-bottom: 12px; }}
@@ -123,11 +117,23 @@ st.markdown(f"""
     .stExpander {{ background: {T["card_bg"]} !important; border: 1px solid {T["card_border"]} !important; border-radius: 14px !important; margin-bottom: 12px !important; box-shadow: {T["shadow"]}; }}
     summary {{ color: {T["text_main"]} !important; font-weight: 800 !important; }}
     
-    .day-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 12px; margin-top: 10px; }}
+    /* 🚀 HD NETLİK VE KARTAL GÖZÜ TASARIMI 🚀 */
+    .day-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 10px; margin-top: 5px; }}
     
-    /* GÜNLERİN KUTUCUKLARI (Yazılar her zaman beyaz kalsın diye important ekledim) */
-    .day-item {{ text-align: center; font-weight: 900; border-radius: 14px; padding: 12px 6px; color: white !important; min-height: 95px; box-shadow: 0 8px 16px rgba(0,0,0,0.18); transition: transform 0.15s ease, box-shadow 0.15s ease; }}
-    .day-item:hover {{ transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,0,0,0.22); }}
+    .day-item {{ 
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        text-align: center; border-radius: 12px; color: white !important; 
+        padding: 6px 2px; /* Kutu içi boşlukları (padding) sıfıra yaklaştırdım */
+        min-height: 85px; /* Kutuları büyütmemek için min-height düşürüldü */
+        box-shadow: 0 6px 12px rgba(0,0,0,0.2); transition: transform 0.15s ease; 
+        gap: 3px; /* Yazılar arasındaki mesafeyi sıfırladım */
+    }}
+    .day-item:hover {{ transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.25); }}
+    
+    /* YAZILARI DEVASA YAPTIM */
+    .durum-text {{ font-size: 22px; font-weight: 900; line-height: 1; text-shadow: 1px 1px 3px rgba(0,0,0,0.4); }}
+    .tarih-text {{ font-size: 14px; font-weight: 900; line-height: 1; letter-spacing: 0.5px; }}
+    .gun-text {{ font-size: 11px; font-weight: 800; line-height: 1; opacity: 0.95; }}
     
     .status-n {{ background: linear-gradient(135deg, #15803d, #166534); border: 1px solid #22c55e; }}
     .status-htc {{ background: linear-gradient(135deg, #b45309, #92400e); border: 1px solid #fbbf24; }}
@@ -143,15 +149,10 @@ st.markdown(f"""
     .stButton > button, .stLinkButton > a {{ width: 100%; border-radius: 12px !important; border: none !important; font-weight: 800 !important; min-height: 46px; background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}) !important; color: #ffffff !important; box-shadow: 0 10px 22px rgba(0,0,0,0.18); }}
     
     .mert-signature {{ position: fixed; bottom: 12px; left: 15px; font-size: 13px; font-weight: 900; color: {T["text_soft"]}; opacity: 0.8; letter-spacing: 2px; z-index: 1000; }}
-    @media (max-width: 600px) {{ .user-header {{ font-size: 25px; }} #live-clock {{ font-size: 16px; }} .day-grid {{ grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 10px; }} .day-item {{ min-height: 88px; font-size: 13px; }} }}
+    @media (max-width: 600px) {{ .user-header {{ font-size: 25px; }} #live-clock {{ font-size: 16px; }} .day-grid {{ grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 8px; }} .day-item {{ min-height: 80px; padding: 4px 2px; }} }}
     </style>
-""", unsafe_allow_html=True)
-
-# 🚀 SAATİ EKRANA ÇAKAN HTML/JS KODU
-st.markdown(f"""
-    <div id="live-clock-container">
-        <div id="live-clock">{clock_init}</div>
-    </div>
+    
+    <div id="live-clock">{clock_init}</div>
     <script>
     function updateClock() {{
         const el = document.getElementById('live-clock');
@@ -170,7 +171,7 @@ st.markdown(f"""
     </script>
 """, unsafe_allow_html=True)
 
-# 4. VERİ MOTORU VE 🚀 SIFIR HATA TARİH MOTORU
+# 4. VERİ MOTORU VE ÇELİK TARİH ÇÖZÜCÜ
 @st.cache_data
 def load_data():
     try:
@@ -181,29 +182,18 @@ def load_data():
         return None
 
 def filyos_date_engine(t_col):
-    """Exceldeki verinin formatını kendi gözüyle okur, Pandas'ın yalanlarına kanmaz."""
+    """Exceldeki metni ZORLA Gün-Ay-Yıl olarak parçalar."""
     try:
-        clean_str = str(t_col).split(' ')[0] # Örn: '2026-03-01' veya '01.03.2026'
-        
-        # 1. Eğer içinde TİRE (-) varsa: Bu kesinlikle YIL-AY-GÜN formatıdır (2026-03-01)
-        if '-' in clean_str:
-            parts = clean_str.split('-')
-            yil = int(parts[0])
-            ay_num = int(parts[1])
-            gun = int(parts[2])
-            dt_obj = datetime(yil, ay_num, gun)
-            return dt_obj, f"{str(gun).zfill(2)} {AYLAR_TR[ay_num]}", GUNLER_TR[dt_obj.weekday()]
-            
-        # 2. Eğer içinde NOKTA (.) varsa: Bu kesinlikle GÜN.AY.YIL formatıdır (01.03.2026)
-        elif '.' in clean_str:
+        clean_str = str(t_col).split(' ')[0]
+        if '.' in clean_str:
             parts = clean_str.split('.')
-            gun = int(parts[0])
-            ay_num = int(parts[1])
-            yil = int(parts[2]) if len(parts) >= 3 else now_tr.year
-            dt_obj = datetime(yil, ay_num, gun)
-            return dt_obj, f"{str(gun).zfill(2)} {AYLAR_TR[ay_num]}", GUNLER_TR[dt_obj.weekday()]
-            
-        # 3. İkisi de yoksa güvenli modda parçala
+            if len(parts) >= 2:
+                gun = int(parts[0])
+                ay_num = int(parts[1])
+                yil = int(parts[2]) if len(parts) >= 3 else 2026
+                dt_obj = datetime(yil, ay_num, gun)
+                return dt_obj, f"{str(gun).zfill(2)} {AYLAR_TR[ay_num]}", GUNLER_TR[dt_obj.weekday()]
+        
         dt_obj = pd.to_datetime(clean_str, dayfirst=True)
         return dt_obj, f"{str(dt_obj.day).zfill(2)} {AYLAR_TR[dt_obj.month]}", GUNLER_TR[dt_obj.weekday()]
     except:
@@ -278,15 +268,12 @@ else:
     else:
         st.success(f"✅ {L['shift_end']}")
 
-    # ========================================================
-    # 🚀 ADALET MOTORU (EKRANDA NE GÖRÜNÜYORSA ONU TOPLAR)
-    # ========================================================
+    # SADECE GÖRÜNEN MESAİLERİ TOPLA (ŞUBAT HARİÇ)
     t_cols = [c for c in df.columns if '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
     calc_total = 0
     
     for t_col in t_cols:
         dt_obj, _, _ = filyos_date_engine(t_col)
-        # Şubat ayı gizlendiği için hesaba katılmaz!
         is_february = (dt_obj is not None and dt_obj.month == 2)
         m_val = str(row_s.get(t_col, "")).strip()
         
@@ -312,7 +299,6 @@ else:
 
     for h_no, i in enumerate(range(0, len(t_cols), 7), 1):
         hafta = t_cols[i:i+7]
-        # BAŞLIK ÇİFTLEMESİ DÜZELTİLDİ: "📁 PUANTAJ DURUM TAKVİMİ - HAFTA 1"
         with st.expander(f"📁 {L['week_suffix']} - {L['week']} {h_no}"):
             st.markdown('<div class="day-grid">', unsafe_allow_html=True)
             for t_col in hafta:
@@ -322,17 +308,18 @@ else:
                 dt_obj, day_label, g_adi = filyos_date_engine(t_col)
                 cls = get_status_class(durum)
 
-                # ŞUBAT AYI MESAI GIZLEME MANTIĞI & TEMİZ ETİKET
+                # ŞUBAT GİZLEME VE DEV MESAİ ETİKETİ
                 is_february = (dt_obj is not None and dt_obj.month == 2)
                 mesai_html = ""
                 if not is_february and mesai not in ["0", "0.0", "nan", "", "None"]:
-                    mesai_html = f'<div style="background:#facc15; color:black; font-size:11px; padding:2px; border-radius:4px; margin-top:4px; font-weight:bold;">⚡ {mesai} {L["overtime"]}</div>'
+                    mesai_html = f'<div style="background:#facc15; color:black; font-size:12px; padding:2px 8px; border-radius:6px; margin-top:2px; font-weight:900; box-shadow:0 2px 4px rgba(0,0,0,0.3);">⚡ {mesai} {L["overtime"]}</div>'
 
+                # HTML: ESKİDEN <BR> İLE ALT ALTA GEÇİYORDU, ŞİMDİ SPAN VE FLEX ILE VAKUMLANDI!
                 st.markdown(f'''
                     <div class="day-item {cls}">
-                        {durum}<br>
-                        <span style="font-size:10px; font-weight:800;">{day_label}</span><br>
-                        <span style="font-size:9px; opacity:0.85;">{g_adi}</span>
+                        <span class="durum-text">{durum}</span>
+                        <span class="tarih-text">{day_label}</span>
+                        <span class="gun-text">{g_adi}</span>
                         {mesai_html}
                     </div>
                 ''', unsafe_allow_html=True)
