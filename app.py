@@ -186,15 +186,17 @@ body {{ background: linear-gradient(135deg, {T["bg_grad_1"]} 0%, {T["bg_grad_2"]
 .stExpander {{ background: {T["card_bg"]} !important; border: 1px solid {T["card_border"]} !important; border-radius: 14px !important; margin-bottom: 12px !important; box-shadow: {T["shadow"]}; }}
 summary {{ color: {T["text_main"]} !important; font-weight: 800 !important; }}
 
-.day-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 10px; margin-top: 4px; }}
+.hafta-baslik {{ font-size: 12.5px; font-weight: 900; letter-spacing: 1px; color: {T["accent"]}; text-transform: uppercase; margin: 16px 0 7px; }}
+.day-grid {{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; margin-bottom: 4px; }}
 .day-item {{ display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-    border-radius: 12px; color: #fff !important; padding: 7px 3px; min-height: 84px; box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    border-radius: 11px; color: #fff !important; padding: 7px 3px; min-height: 74px; box-shadow: 0 5px 11px rgba(0,0,0,0.20);
     transition: transform 0.15s ease; gap: 3px; }}
-.day-item:hover {{ transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.28); }}
-.durum-text {{ font-size: 22px; font-weight: 900; line-height: 1; text-shadow: 1px 1px 3px rgba(0,0,0,0.4); }}
-.tarih-text {{ font-size: 13px; font-weight: 900; line-height: 1; letter-spacing: 0.3px; }}
-.gun-text {{ font-size: 11px; font-weight: 800; line-height: 1; opacity: 0.9; }}
-.mesai-badge {{ background: #facc15; color: #111; font-size: 12px; padding: 2px 8px; border-radius: 6px; margin-top: 3px; font-weight: 900; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }}
+.day-item:hover {{ transform: translateY(-2px); box-shadow: 0 9px 18px rgba(0,0,0,0.28); }}
+.day-meta {{ display: flex; flex-direction: column; align-items: center; gap: 2px; }}
+.durum-text {{ font-size: 20px; font-weight: 900; line-height: 1; text-shadow: 1px 1px 3px rgba(0,0,0,0.4); }}
+.tarih-text {{ font-size: 12px; font-weight: 900; line-height: 1; letter-spacing: 0.2px; }}
+.gun-text {{ font-size: 10.5px; font-weight: 800; line-height: 1; opacity: 0.9; }}
+.mesai-badge {{ background: #facc15; color: #111; font-size: 11px; padding: 2px 7px; border-radius: 6px; margin-top: 2px; font-weight: 900; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }}
 
 .status-n {{ background: linear-gradient(135deg, #0d9488, #0f766e); border: 1px solid #2dd4bf; }}
 .status-htc {{ background: linear-gradient(135deg, #b45309, #92400e); border: 1px solid #fbbf24; }}
@@ -219,9 +221,12 @@ summary {{ color: {T["text_main"]} !important; font-weight: 800 !important; }}
 @media (max-width: 600px) {{
     .portal-title {{ font-size: 21px; }} .month-title {{ font-size: 15px; }}
     .user-header {{ font-size: 24px; }} #live-clock {{ font-size: 16px; }}
-    .day-grid {{ grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }}
-    .day-item {{ min-height: 80px; padding: 5px 2px; }}
-    .ozet-grid {{ grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 9px; }}
+    .day-grid {{ grid-template-columns: 1fr; gap: 7px; }}
+    .day-item {{ flex-direction: row; justify-content: flex-start; align-items: center; min-height: 0; padding: 10px 14px; gap: 12px; text-align: left; }}
+    .day-meta {{ flex-direction: row; align-items: baseline; gap: 8px; }}
+    .durum-text {{ font-size: 18px; min-width: 32px; }}
+    .mesai-badge {{ margin: 0 0 0 auto; }}
+    .ozet-grid {{ grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 9px; }}
 }}
 </style>
 
@@ -396,15 +401,9 @@ else:
             last_date = dt_obj
         date_mapping[t_col] = dt_obj
 
-    cnt = {"N": 0, "HTÇ": 0, "HT": 0, "BAYRAM": 0, "Üİ": 0}
+    cnt_unused = None
     calc_total = 0
     for t_col in t_cols:
-        d = str(row_g.get(t_col, "")).strip().upper()
-        if d == "N": cnt["N"] += 1
-        elif d == "HTÇ": cnt["HTÇ"] += 1
-        elif d == "HT": cnt["HT"] += 1
-        elif d in ("B", "BÇ"): cnt["BAYRAM"] += 1
-        elif d == "Üİ": cnt["Üİ"] += 1
         m_val = str(row_s.get(t_col, "")).strip()
         if m_val not in ["", "0", "0.0", "nan", "None"]:
             try:
@@ -442,11 +441,6 @@ else:
             <div class="ozet-grid">
                 <div class="ozet-tile"><div class="ozet-num hl1">{odenecek}</div><div class="ozet-lbl">{L['paid_days']}</div></div>
                 <div class="ozet-tile"><div class="ozet-num hl2">{toplam_mesai}</div><div class="ozet-lbl">{L['total_over']}</div></div>
-                <div class="ozet-tile"><div class="ozet-num">{cnt['N']}</div><div class="ozet-lbl">{L['s_normal']}</div></div>
-                <div class="ozet-tile"><div class="ozet-num">{cnt['HTÇ']}</div><div class="ozet-lbl">{L['s_pazar']}</div></div>
-                <div class="ozet-tile"><div class="ozet-num">{cnt['HT']}</div><div class="ozet-lbl">{L['s_tatil']}</div></div>
-                <div class="ozet-tile"><div class="ozet-num">{cnt['BAYRAM']}</div><div class="ozet-lbl">{L['s_bayram']}</div></div>
-                <div class="ozet-tile"><div class="ozet-num">{cnt['Üİ']}</div><div class="ozet-lbl">{L['s_yok']}</div></div>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -465,31 +459,31 @@ else:
 
     for h_no, i in enumerate(range(0, len(t_cols), 7), 1):
         hafta = t_cols[i:i+7]
-        with st.expander(f"📁 {L['week_suffix']} — {L['week']} {h_no}"):
-            st.markdown('<div class="day-grid">', unsafe_allow_html=True)
-            for t_col in hafta:
-                durum = str(row_g.get(t_col, "")).strip().upper()
-                mesai = str(row_s.get(t_col, "")).strip()
-                dt_obj = date_mapping.get(t_col)
-                if dt_obj:
-                    day_label = f"{str(dt_obj.day).zfill(2)} {AYLAR_TR[dt_obj.month]}"
-                    g_adi = GUNLER_TR[dt_obj.weekday()]
-                else:
-                    day_label = str(t_col).split(' ')[0]
-                    g_adi = ""
-                cls = get_status_class(durum)
-                mesai_html = ""
-                if mesai not in ["0", "0.0", "nan", "", "None"]:
-                    mesai_html = f'<div class="mesai-badge">⚡ {mesai} {L["overtime"]}</div>'
-                st.markdown(f'''
-                    <div class="day-item {cls}">
-                        <span class="durum-text">{durum}</span>
-                        <span class="tarih-text">{day_label}</span>
-                        <span class="gun-text">{g_adi}</span>
-                        {mesai_html}
-                    </div>
-                ''', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="hafta-baslik">📅 {L["week"]} {h_no}</div>', unsafe_allow_html=True)
+        grid_html = '<div class="day-grid">'
+        for t_col in hafta:
+            durum = str(row_g.get(t_col, "")).strip().upper()
+            mesai = str(row_s.get(t_col, "")).strip()
+            dt_obj = date_mapping.get(t_col)
+            if dt_obj:
+                day_label = f"{str(dt_obj.day).zfill(2)} {AYLAR_TR[dt_obj.month]}"
+                g_adi = GUNLER_TR[dt_obj.weekday()]
+            else:
+                day_label = str(t_col).split(' ')[0]
+                g_adi = ""
+            cls = get_status_class(durum)
+            mesai_html = ""
+            if mesai not in ["0", "0.0", "nan", "", "None"]:
+                mesai_html = f'<div class="mesai-badge">⚡ {mesai} {L["overtime"]}</div>'
+            grid_html += (
+                f'<div class="day-item {cls}">'
+                f'<span class="durum-text">{durum}</span>'
+                f'<div class="day-meta"><span class="tarih-text">{day_label}</span>'
+                f'<span class="gun-text">{g_adi}</span></div>'
+                f'{mesai_html}</div>'
+            )
+        grid_html += '</div>'
+        st.markdown(grid_html, unsafe_allow_html=True)
 
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.subheader(f"🚨 {L['appeal_head']}")
@@ -497,8 +491,11 @@ else:
 
     konu = st.selectbox(L['subject'], L['topic_opts'], label_visibility="collapsed")
     notunuz = st.text_area(L['note'])
-    msg = f"İTİRAZ: {row_g['AD SOYAD']}\nKonu: {konu}\nNot: {notunuz}"
-    st.link_button("🚨 " + L['send'], f"https://wa.me/905435314160?text={urllib.parse.quote(msg)}")
+    mail_adres = "ret-filyos2A-ik@ronesans.com"
+    mail_konu = f"İtiraz - {row_g['AD SOYAD']} ({konu})"
+    mail_govde = f"Ad Soyad: {row_g['AD SOYAD']}\nGörevi: {row_g['GÖREVİ']}\nKonu: {konu}\nNot: {notunuz}"
+    mailto = f"mailto:{mail_adres}?subject={urllib.parse.quote(mail_konu)}&body={urllib.parse.quote(mail_govde)}"
+    st.link_button("✉️ " + L['send'], mailto)
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="mert-signature">POWERED BY Mert DÜZCÜK</div>', unsafe_allow_html=True)
