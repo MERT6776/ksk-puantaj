@@ -250,6 +250,15 @@ def get_status_class(durum):
         "BÇ": "status-bc", "B": "status-b", "Üİ": "status-ui"
     }.get(durum, "status-default")
 
+def norm_key(v):
+    """FİORİ NO ve DOĞUM YILI karşılaştırmasını kırılmaz yapar.
+    Boş hücre yüzünden sütun float olsa bile '2000.0' -> '2000' yapar,
+    baştaki/sondaki boşlukları temizler."""
+    s = str(v).strip()
+    if s.endswith(".0"):
+        s = s[:-2]
+    return s
+
 df = load_data()
 
 # ------------------------------------------------------------------
@@ -272,8 +281,9 @@ if not st.session_state['logged_in']:
 
     if st.button(L['login']):
         if df is not None:
-            res = df[(df['FİORİ NO'].astype(str).str.strip() == str(sicil).strip()) &
-                     (df['DOĞUM YILI'].astype(str).str.strip() == str(sifre).strip())]
+            fiori_col = df['FİORİ NO'].map(norm_key)
+            dogum_col = df['DOĞUM YILI'].map(norm_key)
+            res = df[(fiori_col == norm_key(sicil)) & (dogum_col == norm_key(sifre))]
             if not res.empty:
                 st.session_state['user_data'] = res
                 st.session_state['logged_in'] = True
