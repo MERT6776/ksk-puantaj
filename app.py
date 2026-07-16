@@ -29,7 +29,7 @@ LANGS = {
         "theme": "Tema Seçimi", "month_title": "PERSONEL PUANTAJI", "overtime": "SAAT", "logout": "ÇIKIŞ YAP",
         "subject": "Konu", "err": "Bilgiler hatalı, tekrar deneyin.",
         "topic_opts": ["Seçiniz...", "Puantaj İtirazı", "Mesai İtirazı", "Diğer"],
-        "summary": "AY ÖZETİ",
+        "summary": "AY ÖZETİ", "full_title": "TÜM PUANTAJ (ALT ALTA)",
         "verify_title": "GÜVENLİK DOĞRULAMASI", "verify_desc": "Robot olmadığınızı doğrulamak için aşağıdaki kodu giriniz.",
         "verify_field": "DOĞRULAMA KODU", "verify_btn": "DOĞRULA VE GİR", "verify_err": "Kod hatalı, lütfen tekrar deneyin.",
         "new_code": "🔄 Yeni Kod", "back": "← Geri",
@@ -55,7 +55,7 @@ LANGS = {
         "theme": "Theme", "month_title": "PERSONNEL PAYROLL", "overtime": "HRS", "logout": "LOGOUT",
         "subject": "Subject", "err": "Invalid credentials, please try again.",
         "topic_opts": ["Select...", "Payroll Objection", "Overtime Objection", "Other"],
-        "summary": "MONTHLY SUMMARY",
+        "summary": "MONTHLY SUMMARY", "full_title": "FULL TIMESHEET (LIST)",
         "verify_title": "SECURITY CHECK", "verify_desc": "Enter the code below to verify you are not a robot.",
         "verify_field": "VERIFICATION CODE", "verify_btn": "VERIFY & ENTER", "verify_err": "Wrong code, please try again.",
         "new_code": "🔄 New Code", "back": "← Back",
@@ -81,7 +81,7 @@ LANGS = {
         "theme": "Mavzu", "month_title": "XODIMLAR PUANTAJI", "overtime": "SOAT", "logout": "CHIQISH",
         "subject": "Mavzu", "err": "Ma'lumot noto'g'ri, qayta urinib ko'ring.",
         "topic_opts": ["Tanlang...", "Puantaj e'tirozi", "Ish vaqti e'tirozi", "Boshqa"],
-        "summary": "OYLIK HISOBOT",
+        "summary": "OYLIK HISOBOT", "full_title": "TO'LIQ PUANTAJ (RO'YXAT)",
         "verify_title": "XAVFSIZLIK TEKSHIRUVI", "verify_desc": "Robot emasligingizni tasdiqlash uchun quyidagi kodni kiriting.",
         "verify_field": "TASDIQLASH KODI", "verify_btn": "TASDIQLASH VA KIRISH", "verify_err": "Kod noto'g'ri, qayta urinib ko'ring.",
         "new_code": "🔄 Yangi Kod", "back": "← Orqaga",
@@ -180,6 +180,12 @@ def init_state():
             st.session_state[k] = v
 init_state()
 
+# Eski/geçersiz oturum değerlerine karşı koruma (KeyError önler)
+if st.session_state['theme'] not in THEMES:
+    st.session_state['theme'] = "corporate_dark"
+if st.session_state['lang'] not in LANGS:
+    st.session_state['lang'] = "TR"
+
 L = LANGS[st.session_state['lang']]
 T = THEMES[st.session_state['theme']]
 LNG = st.session_state['lang']
@@ -219,6 +225,12 @@ body {{ background: linear-gradient(135deg, {T["bg_grad_1"]} 0%, {T["bg_grad_2"]
 .ozet-num.hl2 {{ color: {T["accent_2"]}; }}
 .ozet-lbl {{ font-size: 12px; font-weight: 700; color: {T["text_soft"]}; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.4px; }}
 .day-grid {{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; margin-bottom: 12px; }}
+.list-baslik {{ font-size: 13px; font-weight: 900; letter-spacing: 1px; color: {T["accent"]}; text-transform: uppercase; margin: 22px 0 8px; }}
+.full-list {{ display: grid; grid-template-columns: 1fr; gap: 7px; margin-bottom: 16px; }}
+.full-list .day-item {{ flex-direction: row; justify-content: flex-start; align-items: center; min-height: 0; padding: 10px 14px; gap: 12px; text-align: left; }}
+.full-list .day-meta {{ flex-direction: row; align-items: baseline; gap: 8px; }}
+.full-list .durum-text {{ font-size: 18px; min-width: 32px; }}
+.full-list .mesai-badge {{ margin: 0 0 0 auto; }}
 .day-item {{ display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border-radius: 11px; color: #fff !important; padding: 7px 3px; min-height: 74px; box-shadow: 0 5px 11px rgba(0,0,0,0.20); transition: transform 0.15s ease; gap: 3px; }}
 .day-item:hover {{ transform: translateY(-2px); box-shadow: 0 9px 18px rgba(0,0,0,0.28); }}
 .day-meta {{ display: flex; flex-direction: column; align-items: center; gap: 2px; }}
@@ -290,25 +302,55 @@ def norm_key(v):
     s = str(v).strip()
     return s[:-2] if s.endswith(".0") else s
 
-def show_lock_screen(remaining, mesaj):
-    st.markdown(f"""
-        <div class="lock-wrap">
-            <div style="font-size:44px;">⏳</div>
-            <div class="lock-msg">{mesaj}</div>
-            <div class="lock-count" id="lock-countdown">{remaining}</div>
-        </div>
-        <script>
-        (function(){{
-            var t = {remaining};
-            var el = document.getElementById('lock-countdown');
-            var iv = setInterval(function(){{
-                t -= 1;
-                if(el) el.innerHTML = (t > 0 ? t : 0);
-                if(t <= 0){{ clearInterval(iv); window.location.reload(); }}
-            }}, 1000);
-        }})();
-        </script>
-    """, unsafe_allow_html=True)
+def set_lock(param_key, seconds):
+    st.query_params[param_key] = str(int(time.time() + seconds))
+
+def clear_lock(param_key):
+    try:
+        del st.query_params[param_key]
+    except Exception:
+        pass
+
+def check_lock(param_key, mesaj):
+    """URL'ye gömülü kilit süresini kontrol eder. Kilitliyse geri sayan ekranı
+    gösterir (sunucu taraflı, JS'siz). Süre bitince kilidi temizler.
+    Sayfa yenilense bile URL'de kaldığı için kilit devam eder."""
+    val = st.query_params.get(param_key)
+    if not val:
+        return
+    try:
+        lock_ts = float(val)
+    except Exception:
+        clear_lock(param_key)
+        return
+    remaining = int(round(lock_ts - time.time()))
+    if remaining > 0:
+        st.markdown(f"""
+            <div class="lock-wrap">
+                <div style="font-size:44px;">⏳</div>
+                <div class="lock-msg">{mesaj}</div>
+                <div class="lock-count">{remaining}</div>
+            </div>
+        """, unsafe_allow_html=True)
+        time.sleep(1)
+        st.rerun()
+    else:
+        clear_lock(param_key)
+
+def build_day_item(t_col, row_g, row_s, date_mapping, lng):
+    durum = str(row_g.get(t_col, "")).strip().upper()   # HARF AYNI KALIR (çevrilmez)
+    mesai = str(row_s.get(t_col, "")).strip()
+    dt_obj = date_mapping.get(t_col)
+    if dt_obj:
+        day_label = f"{str(dt_obj.day).zfill(2)} {AYLAR[lng][dt_obj.month]}"
+        g_adi = GUNLER[lng][dt_obj.weekday()]
+    else:
+        day_label = str(t_col).split(' ')[0]; g_adi = ""
+    cls = get_status_class(durum)
+    mesai_html = f'<div class="mesai-badge">⚡ {mesai} {L["overtime"]}</div>' if mesai not in ["0", "0.0", "nan", "", "None"] else ""
+    return (f'<div class="day-item {cls}"><span class="durum-text">{durum}</span>'
+            f'<div class="day-meta"><span class="tarih-text">{day_label}</span>'
+            f'<span class="gun-text">{g_adi}</span></div>{mesai_html}</div>')
 
 df = load_data()
 
@@ -318,11 +360,8 @@ df = load_data()
 if not st.session_state['logged_in'] and not st.session_state['awaiting_verify']:
     st.markdown(f"<div class='month-title'>{ay_baslik}</div>", unsafe_allow_html=True)
 
-    # Şifre kilidi (3 hatalı -> 3 dk)
-    kalan = int(st.session_state['login_lock_until'] - time.time())
-    if kalan > 0:
-        show_lock_screen(kalan, L['login_locked'])
-        st.stop()
+    # Şifre kilidi (3 hatalı -> 3 dk), geri sayan
+    check_lock('llock', L['login_locked'])
 
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.selectbox(L['lang'], ["TR", "EN", "UZ"], key='lang', format_func=lambda k: LANG_NAMES[k])
@@ -337,6 +376,7 @@ if not st.session_state['logged_in'] and not st.session_state['awaiting_verify']
             dogum_col = df['DOĞUM YILI'].map(norm_key)
             res = df[(fiori_col == norm_key(sicil)) & (dogum_col == norm_key(sifre))]
             if not res.empty:
+                clear_lock('llock')
                 st.session_state['pending_user'] = res
                 st.session_state['awaiting_verify'] = True
                 st.session_state['verify_code'] = f"{random.randint(0, 9999):04d}"
@@ -346,7 +386,7 @@ if not st.session_state['logged_in'] and not st.session_state['awaiting_verify']
             else:
                 st.session_state['login_fails'] += 1
                 if st.session_state['login_fails'] >= MAX_TRY:
-                    st.session_state['login_lock_until'] = time.time() + LOGIN_LOCK_SEC
+                    set_lock('llock', LOGIN_LOCK_SEC)
                     st.session_state['login_fails'] = 0
                     st.rerun()
                 else:
@@ -377,14 +417,10 @@ if not st.session_state['logged_in'] and not st.session_state['awaiting_verify']
 # EKRAN 2 — DOĞRULAMA
 # ==================================================================
 elif st.session_state['awaiting_verify'] and not st.session_state['logged_in']:
-    # Kod kilidi (3 hatalı -> 30 sn)
-    kalan = int(st.session_state['verify_lock_until'] - time.time())
-    if kalan > 0:
-        st.markdown(f"<h1 class='portal-title'>🔐 {L['verify_title']}</h1>", unsafe_allow_html=True)
-        show_lock_screen(kalan, L['verify_locked'])
-        st.stop()
-
+    # Kod kilidi (3 hatalı -> 30 sn), geri sayan
     st.markdown(f"<h1 class='portal-title'>🔐 {L['verify_title']}</h1>", unsafe_allow_html=True)
+    check_lock('vlock', L['verify_locked'])
+
     st.markdown(f"<div class='verify-note'>{L['verify_desc']}</div>", unsafe_allow_html=True)
     st.markdown(f"<div class='kod-box'>{st.session_state['verify_code']}</div>", unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -393,6 +429,7 @@ elif st.session_state['awaiting_verify'] and not st.session_state['logged_in']:
 
     if st.button(L['verify_btn'], type="primary"):
         if str(girilen_kod).strip() == st.session_state['verify_code']:
+            clear_lock('vlock'); clear_lock('llock')
             st.session_state['user_data'] = st.session_state['pending_user']
             st.session_state['logged_in'] = True
             st.session_state['awaiting_verify'] = False
@@ -402,7 +439,7 @@ elif st.session_state['awaiting_verify'] and not st.session_state['logged_in']:
         else:
             st.session_state['verify_fails'] += 1
             if st.session_state['verify_fails'] >= MAX_TRY:
-                st.session_state['verify_lock_until'] = time.time() + VERIFY_LOCK_SEC
+                set_lock('vlock', VERIFY_LOCK_SEC)
                 st.session_state['verify_fails'] = 0
                 st.rerun()
             else:
@@ -506,21 +543,17 @@ else:
         if acik:
             grid_html = '<div class="day-grid">'
             for t_col in hafta:
-                durum = str(row_g.get(t_col, "")).strip().upper()   # HARF AYNI KALIR
-                mesai = str(row_s.get(t_col, "")).strip()
-                dt_obj = date_mapping.get(t_col)
-                if dt_obj:
-                    day_label = f"{str(dt_obj.day).zfill(2)} {AYLAR[LNG][dt_obj.month]}"
-                    g_adi = GUNLER[LNG][dt_obj.weekday()]
-                else:
-                    day_label = str(t_col).split(' ')[0]; g_adi = ""
-                cls = get_status_class(durum)
-                mesai_html = f'<div class="mesai-badge">⚡ {mesai} {L["overtime"]}</div>' if mesai not in ["0", "0.0", "nan", "", "None"] else ""
-                grid_html += (f'<div class="day-item {cls}"><span class="durum-text">{durum}</span>'
-                              f'<div class="day-meta"><span class="tarih-text">{day_label}</span>'
-                              f'<span class="gun-text">{g_adi}</span></div>{mesai_html}</div>')
+                grid_html += build_day_item(t_col, row_g, row_s, date_mapping, LNG)
             grid_html += '</div>'
             st.markdown(grid_html, unsafe_allow_html=True)
+
+    # 2. PUANTAJ — TÜM GÜNLER ALT ALTA (tuşsuz, her zaman açık)
+    st.markdown(f'<div class="list-baslik">📋 {L["full_title"]}</div>', unsafe_allow_html=True)
+    full_html = '<div class="full-list">'
+    for t_col in t_cols:
+        full_html += build_day_item(t_col, row_g, row_s, date_mapping, LNG)
+    full_html += '</div>'
+    st.markdown(full_html, unsafe_allow_html=True)
 
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.subheader(f"🚨 {L['appeal_head']}")
