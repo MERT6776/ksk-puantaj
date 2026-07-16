@@ -238,6 +238,9 @@ body {{ background: linear-gradient(135deg, {T["bg_grad_1"]} 0%, {T["bg_grad_2"]
 [data-testid="stWidgetLabel"] p, [data-testid="stWidgetLabel"] label {{ color: {T["text_soft"]} !important; }}
 [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] * {{ color: {T["text_soft"]} !important; }}
 [data-testid="stExpanderDetails"] p, [data-testid="stExpanderDetails"] li, [data-testid="stExpanderDetails"] strong {{ color: {T["text_main"]} !important; }}
+/* Radio seçimleri (dil + konu) — açık zeminde koyu yazı */
+[data-testid="stRadio"] label, [data-testid="stRadio"] p, [data-testid="stRadio"] div, [data-testid="stRadio"] span {{ color: {T["text_main"]} !important; }}
+[data-testid="stRadio"] [role="radiogroup"] label {{ background: {T["card_bg"]} !important; border: 1px solid {T["card_border"]}; border-radius: 10px; padding: 6px 12px !important; margin: 3px 6px 3px 0 !important; }}
 .stButton > button, .stLinkButton > a, .stForm [data-testid="stFormSubmitButton"] > button {{ width: 100%; border-radius: 12px !important; border: none !important; font-weight: 900 !important; min-height: 46px; letter-spacing: 0.5px; background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}) !important; color: #0b1020 !important; text-shadow: none !important; box-shadow: 0 10px 22px rgba(0,0,0,0.20); }}
 .stButton > button[kind="secondary"] {{ background: {T["card_bg"]} !important; color: {T["text_main"]} !important; border: 1px solid {T["card_border"]} !important; box-shadow: none !important; text-align: left; }}
 .mert-signature {{ position: fixed; bottom: 12px; left: 15px; font-size: 12px; font-weight: 900; color: {T["text_soft"]}; opacity: 0.75; letter-spacing: 2px; z-index: 1000; }}
@@ -355,7 +358,7 @@ if not st.session_state['logged_in'] and not st.session_state['awaiting_verify']
     check_lock('llock', L['login_locked'])
 
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.selectbox(L['lang'], ["TR", "EN", "UZ"], key='lang', format_func=lambda k: LANG_NAMES[k])
+    st.radio(L['lang'], ["TR", "EN", "UZ"], key='lang', format_func=lambda k: LANG_NAMES[k], horizontal=True)
 
     sicil = st.text_input(L['sicil'])
     sifre = st.text_input(L['pass'], type="password")
@@ -455,7 +458,7 @@ else:
 
     ust1, ust2 = st.columns([2, 1])
     with ust1:
-        st.selectbox(L['lang'], ["TR", "EN", "UZ"], key='lang', format_func=lambda k: LANG_NAMES[k], label_visibility="collapsed")
+        st.radio(L['lang'], ["TR", "EN", "UZ"], key='lang', format_func=lambda k: LANG_NAMES[k], horizontal=True, label_visibility="collapsed")
     with ust2:
         if st.button("🚪 " + L['logout'], type="primary", use_container_width=True):
             for k in ['logged_in', 'awaiting_verify', 'itiraz_ready']:
@@ -553,7 +556,7 @@ else:
     st.markdown(f'<p style="font-size:14px; font-weight:600; color:{T["text_soft"]}; margin-bottom:15px;"><i>{L["appeal_desc"]}</i></p>', unsafe_allow_html=True)
 
     with st.form("itiraz_form"):
-        konu = st.selectbox(L['subject'], L['topic_opts'], label_visibility="collapsed")
+        konu = st.radio(L['subject'], L['topic_opts'], horizontal=True, label_visibility="collapsed")
         notunuz = st.text_area(L['note'])
         gonder = st.form_submit_button("🚨 " + L['send'])
 
