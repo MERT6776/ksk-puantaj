@@ -228,11 +228,16 @@ body {{ background: linear-gradient(135deg, {T["bg_grad_1"]} 0%, {T["bg_grad_2"]
 .status-default {{ background: linear-gradient(135deg, #334155, #1e293b); border: 1px solid #64748b; }}
 .stTextInput > div > div > input, .stTextArea textarea, .stSelectbox > div > div {{ background-color: {T["input_bg"]} !important; color: {T["input_text"]} !important; border: 2px solid {T["card_border"]} !important; border-radius: 12px !important; }}
 .stTextInput label, .stTextArea label, .stSelectbox label {{ color: {T["text_soft"]} !important; font-weight: 700 !important; letter-spacing: 0.5px; }}
-/* Açık temada görünürlük garantisi */
-[data-baseweb="select"] * {{ color: {T["input_text"]} !important; }}
-[data-testid="stExpander"] summary {{ color: {T["text_main"]} !important; background: {T["card_bg"]} !important; }}
-[data-testid="stExpander"] summary p, [data-testid="stExpander"] summary span {{ color: {T["text_main"]} !important; }}
+/* Açık tema görünürlük garantisi (config.toml GEREKMEDEN, sadece CSS) */
+[data-baseweb="select"] *, [data-baseweb="input"] input {{ color: {T["input_text"]} !important; }}
+[data-baseweb="popover"] *, [data-baseweb="menu"] *, [role="option"] {{ color: {T["text_main"]} !important; }}
+[data-baseweb="menu"], [data-baseweb="popover"] ul {{ background: #ffffff !important; }}
+[data-testid="stExpander"], [data-testid="stExpander"] details {{ background: {T["card_bg"]} !important; }}
+[data-testid="stExpander"] summary, [data-testid="stExpander"] summary * {{ color: {T["text_main"]} !important; background: transparent !important; }}
 [data-testid="stExpander"] summary svg {{ fill: {T["text_main"]} !important; }}
+[data-testid="stWidgetLabel"] p, [data-testid="stWidgetLabel"] label {{ color: {T["text_soft"]} !important; }}
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] * {{ color: {T["text_soft"]} !important; }}
+[data-testid="stExpanderDetails"] p, [data-testid="stExpanderDetails"] li, [data-testid="stExpanderDetails"] strong {{ color: {T["text_main"]} !important; }}
 .stButton > button, .stLinkButton > a, .stForm [data-testid="stFormSubmitButton"] > button {{ width: 100%; border-radius: 12px !important; border: none !important; font-weight: 900 !important; min-height: 46px; letter-spacing: 0.5px; background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}) !important; color: #0b1020 !important; text-shadow: none !important; box-shadow: 0 10px 22px rgba(0,0,0,0.20); }}
 .stButton > button[kind="secondary"] {{ background: {T["card_bg"]} !important; color: {T["text_main"]} !important; border: 1px solid {T["card_border"]} !important; box-shadow: none !important; text-align: left; }}
 .mert-signature {{ position: fixed; bottom: 12px; left: 15px; font-size: 12px; font-weight: 900; color: {T["text_soft"]}; opacity: 0.75; letter-spacing: 2px; z-index: 1000; }}
