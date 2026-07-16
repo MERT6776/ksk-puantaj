@@ -228,6 +228,11 @@ body {{ background: linear-gradient(135deg, {T["bg_grad_1"]} 0%, {T["bg_grad_2"]
 .status-default {{ background: linear-gradient(135deg, #334155, #1e293b); border: 1px solid #64748b; }}
 .stTextInput > div > div > input, .stTextArea textarea, .stSelectbox > div > div {{ background-color: {T["input_bg"]} !important; color: {T["input_text"]} !important; border: 2px solid {T["card_border"]} !important; border-radius: 12px !important; }}
 .stTextInput label, .stTextArea label, .stSelectbox label {{ color: {T["text_soft"]} !important; font-weight: 700 !important; letter-spacing: 0.5px; }}
+/* Açık temada görünürlük garantisi */
+[data-baseweb="select"] * {{ color: {T["input_text"]} !important; }}
+[data-testid="stExpander"] summary {{ color: {T["text_main"]} !important; background: {T["card_bg"]} !important; }}
+[data-testid="stExpander"] summary p, [data-testid="stExpander"] summary span {{ color: {T["text_main"]} !important; }}
+[data-testid="stExpander"] summary svg {{ fill: {T["text_main"]} !important; }}
 .stButton > button, .stLinkButton > a, .stForm [data-testid="stFormSubmitButton"] > button {{ width: 100%; border-radius: 12px !important; border: none !important; font-weight: 900 !important; min-height: 46px; letter-spacing: 0.5px; background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}) !important; color: #0b1020 !important; text-shadow: none !important; box-shadow: 0 10px 22px rgba(0,0,0,0.20); }}
 .stButton > button[kind="secondary"] {{ background: {T["card_bg"]} !important; color: {T["text_main"]} !important; border: 1px solid {T["card_border"]} !important; box-shadow: none !important; text-align: left; }}
 .mert-signature {{ position: fixed; bottom: 12px; left: 15px; font-size: 12px; font-weight: 900; color: {T["text_soft"]}; opacity: 0.75; letter-spacing: 2px; z-index: 1000; }}
@@ -332,22 +337,6 @@ def build_day_item(t_col, row_g, row_s, date_mapping, lng):
     return (f'<div class="day-item {cls}"><span class="durum-text">{durum}</span>'
             f'<div class="day-meta"><span class="tarih-text">{day_label}</span>'
             f'<span class="gun-text">{g_adi}</span></div>{mesai_html}</div>')
-
-def render_watermark(text):
-    """Ekranın üzerine soluk, tekrarlı filigran basar: kişinin adı+sicili+tarih.
-    Engellemez ama ekran görüntüsü alınırsa kişiyi işaretler (caydırıcı + iz)."""
-    guvenli = str(text).replace("<", " ").replace(">", " ").replace("&", " ")
-    svg = (f"<svg xmlns='http://www.w3.org/2000/svg' width='360' height='180'>"
-           f"<text x='16' y='96' fill='rgba(148,163,184,0.16)' font-size='14' font-weight='700' "
-           f"font-family='Arial, sans-serif' transform='rotate(-28 180 90)'>{guvenli}</text></svg>")
-    data = urllib.parse.quote(svg)
-    st.markdown(f"""
-        <style>
-        #wmark {{ position: fixed; inset: 0; z-index: 9998; pointer-events: none;
-                  background-image: url("data:image/svg+xml,{data}"); background-repeat: repeat; }}
-        </style>
-        <div id="wmark"></div>
-    """, unsafe_allow_html=True)
 
 df = load_data()
 
@@ -497,11 +486,6 @@ else:
     st.write("")
     st.markdown(f'<div class="user-header">{greet}, {row_g["AD SOYAD"]}</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="user-sub">{cevir_gorev(row_g["GÖREVİ"], LNG)}</div>', unsafe_allow_html=True)
-
-    # Ekran görüntüsü caydırıcı: filigran + uyarı
-    wm_text = f"{row_g['AD SOYAD']} • {row_g['FİORİ NO']} • {now_tr.strftime('%d.%m.%Y %H:%M')}"
-    render_watermark(f"{wm_text}    ")
-    st.markdown(f'<div class="warn-banner">🚫 {L["ss_warn"]}</div>', unsafe_allow_html=True)
 
     st.markdown(f"""<div class="info-banner"><h4 class="info-title">ℹ️ {L['disc_title']}</h4><p class="info-text">{L['disc_text']}</p></div>""", unsafe_allow_html=True)
 
