@@ -29,7 +29,7 @@ LANGS = {
         "theme": "Tema Seçimi", "month_title": "PERSONEL PUANTAJI", "overtime": "SAAT", "logout": "ÇIKIŞ YAP",
         "subject": "Konu", "err": "Bilgiler hatalı, tekrar deneyin.",
         "topic_opts": ["Seçiniz...", "Puantaj İtirazı", "Mesai İtirazı", "Diğer"],
-        "summary": "AY ÖZETİ", "full_title": "TÜM PUANTAJ (ALT ALTA)",
+        "summary": "AY ÖZETİ", "full_title": "AYLIK VERİ", "ss_warn": "Bu ekrandaki bilgiler kişiye özeldir. Ekran görüntüsü / kayıt almak yasaktır; alınan görüntüler kimliğinizle işaretlenir.",
         "verify_title": "GÜVENLİK DOĞRULAMASI", "verify_desc": "Robot olmadığınızı doğrulamak için aşağıdaki kodu giriniz.",
         "verify_field": "DOĞRULAMA KODU", "verify_btn": "DOĞRULA VE GİR", "verify_err": "Kod hatalı, lütfen tekrar deneyin.",
         "new_code": "🔄 Yeni Kod", "back": "← Geri",
@@ -55,7 +55,7 @@ LANGS = {
         "theme": "Theme", "month_title": "PERSONNEL PAYROLL", "overtime": "HRS", "logout": "LOGOUT",
         "subject": "Subject", "err": "Invalid credentials, please try again.",
         "topic_opts": ["Select...", "Payroll Objection", "Overtime Objection", "Other"],
-        "summary": "MONTHLY SUMMARY", "full_title": "FULL TIMESHEET (LIST)",
+        "summary": "MONTHLY SUMMARY", "full_title": "MONTHLY DATA", "ss_warn": "The information here is personal. Screenshots and screen recording are prohibited; captures are marked with your identity.",
         "verify_title": "SECURITY CHECK", "verify_desc": "Enter the code below to verify you are not a robot.",
         "verify_field": "VERIFICATION CODE", "verify_btn": "VERIFY & ENTER", "verify_err": "Wrong code, please try again.",
         "new_code": "🔄 New Code", "back": "← Back",
@@ -81,7 +81,7 @@ LANGS = {
         "theme": "Mavzu", "month_title": "XODIMLAR PUANTAJI", "overtime": "SOAT", "logout": "CHIQISH",
         "subject": "Mavzu", "err": "Ma'lumot noto'g'ri, qayta urinib ko'ring.",
         "topic_opts": ["Tanlang...", "Puantaj e'tirozi", "Ish vaqti e'tirozi", "Boshqa"],
-        "summary": "OYLIK HISOBOT", "full_title": "TO'LIQ PUANTAJ (RO'YXAT)",
+        "summary": "OYLIK HISOBOT", "full_title": "OYLIK MA'LUMOT", "ss_warn": "Bu ma'lumotlar shaxsiy. Skrinshot va ekran yozuvi taqiqlanadi; olingan tasvirlar shaxsingiz bilan belgilanadi.",
         "verify_title": "XAVFSIZLIK TEKSHIRUVI", "verify_desc": "Robot emasligingizni tasdiqlash uchun quyidagi kodni kiriting.",
         "verify_field": "TASDIQLASH KODI", "verify_btn": "TASDIQLASH VA KIRISH", "verify_err": "Kod noto'g'ri, qayta urinib ko'ring.",
         "new_code": "🔄 Yangi Kod", "back": "← Orqaga",
@@ -138,40 +138,20 @@ def cevir_gorev(gorev, lang):
 # TEMALAR (iç anahtar sabit, isim dile göre)
 # ------------------------------------------------------------------
 THEMES = {
-    "corporate_dark": {"bg_grad_1": "#0a0f1e", "bg_grad_2": "#16213e", "card_bg": "rgba(255,255,255,0.06)",
-        "card_border": "rgba(148,163,184,0.20)", "text_main": "#f1f5f9", "text_soft": "#94a3b8",
-        "accent": "#2dd4bf", "accent_2": "#818cf8", "clock": "#5eead4", "input_bg": "rgba(15,23,42,0.75)",
-        "input_text": "#f1f5f9", "shadow": "0 14px 34px rgba(0,0,0,0.38)", "overlay": "rgba(4, 8, 20, 0.55)"},
-    "night_blue": {"bg_grad_1": "#0a1128", "bg_grad_2": "#1c3a5e", "card_bg": "rgba(255,255,255,0.06)",
-        "card_border": "rgba(148,163,184,0.22)", "text_main": "#eaf2ff", "text_soft": "#9db4d4",
-        "accent": "#60a5fa", "accent_2": "#22d3ee", "clock": "#93c5fd", "input_bg": "rgba(10,17,40,0.80)",
-        "input_text": "#eaf2ff", "shadow": "0 14px 34px rgba(0,0,0,0.40)", "overlay": "rgba(5, 10, 28, 0.55)"},
-    "emerald_dark": {"bg_grad_1": "#06231b", "bg_grad_2": "#0b3d2e", "card_bg": "rgba(255,255,255,0.06)",
-        "card_border": "rgba(167,243,208,0.20)", "text_main": "#ecfdf5", "text_soft": "#a7f3d0",
-        "accent": "#34d399", "accent_2": "#a3e635", "clock": "#6ee7b7", "input_bg": "rgba(4,20,15,0.80)",
-        "input_text": "#ecfdf5", "shadow": "0 14px 34px rgba(0,0,0,0.42)", "overlay": "rgba(2, 15, 10, 0.50)"},
     "corporate_light": {"bg_grad_1": "#f1f5f9", "bg_grad_2": "#dbe4f0", "card_bg": "rgba(255,255,255,0.95)",
         "card_border": "rgba(15,23,42,0.10)", "text_main": "#0f172a", "text_soft": "#475569",
         "accent": "#0d9488", "accent_2": "#4f46e5", "clock": "#0f766e", "input_bg": "#ffffff",
-        "input_text": "#0f172a", "shadow": "0 10px 26px rgba(15,23,42,0.10)", "overlay": "rgba(255,255,255,0.30)"},
-    "premium_purple": {"bg_grad_1": "#0f0c29", "bg_grad_2": "#302b63", "card_bg": "rgba(255,255,255,0.08)",
-        "card_border": "rgba(216,180,254,0.22)", "text_main": "#faf5ff", "text_soft": "#ddd6fe",
-        "accent": "#c084fc", "accent_2": "#f472b6", "clock": "#e9d5ff", "input_bg": "rgba(20,15,45,0.78)",
-        "input_text": "#faf5ff", "shadow": "0 16px 42px rgba(0,0,0,0.45)", "overlay": "rgba(10, 6, 30, 0.50)"}
+        "input_text": "#0f172a", "shadow": "0 10px 26px rgba(15,23,42,0.10)", "overlay": "rgba(255,255,255,0.30)"}
 }
 THEME_NAMES = {
-    "corporate_dark":  {"TR": "Kurumsal Koyu", "EN": "Corporate Dark",  "UZ": "Korporativ Qorong'i"},
-    "night_blue":      {"TR": "Gece Mavisi",   "EN": "Night Blue",      "UZ": "Tungi Ko'k"},
-    "emerald_dark":    {"TR": "Zümrüt Koyu",   "EN": "Emerald Dark",    "UZ": "Zumrad Qorong'i"},
-    "corporate_light": {"TR": "Açık Kurumsal", "EN": "Corporate Light", "UZ": "Yorug' Korporativ"},
-    "premium_purple":  {"TR": "Premium Mor",   "EN": "Premium Purple",  "UZ": "Premium Binafsha"}
+    "corporate_light": {"TR": "Açık Kurumsal", "EN": "Corporate Light", "UZ": "Yorug' Korporativ"}
 }
 
 # ------------------------------------------------------------------
 # OTURUM DURUMU
 # ------------------------------------------------------------------
 def init_state():
-    d = {'lang': "TR", 'theme': "corporate_dark", 'logged_in': False, 'awaiting_verify': False,
+    d = {'lang': "TR", 'theme': "corporate_light", 'logged_in': False, 'awaiting_verify': False,
          'pending_user': None, 'verify_code': "", 'week_open': {}, 'itiraz_ready': False, 'itiraz_mailto': "",
          'login_fails': 0, 'login_lock_until': 0.0, 'verify_fails': 0, 'verify_lock_until': 0.0,
          'forgot_ready': False, 'forgot_mailto': ""}
@@ -182,7 +162,7 @@ init_state()
 
 # Eski/geçersiz oturum değerlerine karşı koruma (KeyError önler)
 if st.session_state['theme'] not in THEMES:
-    st.session_state['theme'] = "corporate_dark"
+    st.session_state['theme'] = "corporate_light"
 if st.session_state['lang'] not in LANGS:
     st.session_state['lang'] = "TR"
 
@@ -216,6 +196,7 @@ body {{ background: linear-gradient(135deg, {T["bg_grad_1"]} 0%, {T["bg_grad_2"]
 .info-banner {{ background-color: {T["card_bg"]}; border-left: 5px solid {T["accent"]}; padding: 15px 16px; border-radius: 10px; margin-bottom: 20px; box-shadow: {T["shadow"]}; }}
 .info-title {{ margin: 0; color: {T["accent"]}; font-size: 14px; font-weight: 900; letter-spacing: 1px; }}
 .info-text {{ margin: 6px 0 0 0; font-size: 13.5px; font-weight: 600; color: {T["text_main"]}; opacity: 0.92; }}
+.warn-banner {{ background-color: rgba(239,68,68,0.12); border-left: 5px solid #ef4444; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 13px; font-weight: 700; color: {T["text_main"]}; }}
 .ozet-card {{ background: {T["card_bg"]}; border: 1px solid {T["card_border"]}; border-radius: 18px; padding: 22px; margin-bottom: 20px; box-shadow: {T["shadow"]}; }}
 .ozet-head {{ display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 900; letter-spacing: 1.5px; color: {T["accent"]}; text-transform: uppercase; margin-bottom: 16px; }}
 .ozet-grid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }}
@@ -352,6 +333,22 @@ def build_day_item(t_col, row_g, row_s, date_mapping, lng):
             f'<div class="day-meta"><span class="tarih-text">{day_label}</span>'
             f'<span class="gun-text">{g_adi}</span></div>{mesai_html}</div>')
 
+def render_watermark(text):
+    """Ekranın üzerine soluk, tekrarlı filigran basar: kişinin adı+sicili+tarih.
+    Engellemez ama ekran görüntüsü alınırsa kişiyi işaretler (caydırıcı + iz)."""
+    guvenli = str(text).replace("<", " ").replace(">", " ").replace("&", " ")
+    svg = (f"<svg xmlns='http://www.w3.org/2000/svg' width='360' height='180'>"
+           f"<text x='16' y='96' fill='rgba(148,163,184,0.16)' font-size='14' font-weight='700' "
+           f"font-family='Arial, sans-serif' transform='rotate(-28 180 90)'>{guvenli}</text></svg>")
+    data = urllib.parse.quote(svg)
+    st.markdown(f"""
+        <style>
+        #wmark {{ position: fixed; inset: 0; z-index: 9998; pointer-events: none;
+                  background-image: url("data:image/svg+xml,{data}"); background-repeat: repeat; }}
+        </style>
+        <div id="wmark"></div>
+    """, unsafe_allow_html=True)
+
 df = load_data()
 
 # ==================================================================
@@ -365,7 +362,6 @@ if not st.session_state['logged_in'] and not st.session_state['awaiting_verify']
 
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.selectbox(L['lang'], ["TR", "EN", "UZ"], key='lang', format_func=lambda k: LANG_NAMES[k])
-    st.selectbox(L['theme'], list(THEMES.keys()), key='theme', format_func=lambda k: THEME_NAMES[k][LNG])
 
     sicil = st.text_input(L['sicil'])
     sifre = st.text_input(L['pass'], type="password")
@@ -463,12 +459,10 @@ elif st.session_state['awaiting_verify'] and not st.session_state['logged_in']:
 else:
     u_df = st.session_state['user_data']
 
-    ust1, ust2, ust3 = st.columns([1, 1, 1])
+    ust1, ust2 = st.columns([2, 1])
     with ust1:
         st.selectbox(L['lang'], ["TR", "EN", "UZ"], key='lang', format_func=lambda k: LANG_NAMES[k], label_visibility="collapsed")
     with ust2:
-        st.selectbox(L['theme'], list(THEMES.keys()), key='theme', format_func=lambda k: THEME_NAMES[k][LNG], label_visibility="collapsed")
-    with ust3:
         if st.button("🚪 " + L['logout'], type="primary", use_container_width=True):
             for k in ['logged_in', 'awaiting_verify', 'itiraz_ready']:
                 st.session_state[k] = False
@@ -503,6 +497,11 @@ else:
     st.write("")
     st.markdown(f'<div class="user-header">{greet}, {row_g["AD SOYAD"]}</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="user-sub">{cevir_gorev(row_g["GÖREVİ"], LNG)}</div>', unsafe_allow_html=True)
+
+    # Ekran görüntüsü caydırıcı: filigran + uyarı
+    wm_text = f"{row_g['AD SOYAD']} • {row_g['FİORİ NO']} • {now_tr.strftime('%d.%m.%Y %H:%M')}"
+    render_watermark(f"{wm_text}    ")
+    st.markdown(f'<div class="warn-banner">🚫 {L["ss_warn"]}</div>', unsafe_allow_html=True)
 
     st.markdown(f"""<div class="info-banner"><h4 class="info-title">ℹ️ {L['disc_title']}</h4><p class="info-text">{L['disc_text']}</p></div>""", unsafe_allow_html=True)
 
@@ -547,13 +546,18 @@ else:
             grid_html += '</div>'
             st.markdown(grid_html, unsafe_allow_html=True)
 
-    # 2. PUANTAJ — TÜM GÜNLER ALT ALTA (tuşsuz, her zaman açık)
+    # 2. PUANTAJ — AYLIK VERİ (tüm günler alt alta), aç/kapa düğmeli
     st.markdown(f'<div class="list-baslik">📋 {L["full_title"]}</div>', unsafe_allow_html=True)
-    full_html = '<div class="full-list">'
-    for t_col in t_cols:
-        full_html += build_day_item(t_col, row_g, row_s, date_mapping, LNG)
-    full_html += '</div>'
-    st.markdown(full_html, unsafe_allow_html=True)
+    full_open = st.session_state.setdefault('full_open', True)
+    if st.button(("🔼 " + L['collapse_all']) if full_open else ("🔽 " + L['expand_all']), key="full_toggle", type="primary"):
+        st.session_state['full_open'] = not full_open
+        st.rerun()
+    if st.session_state.get('full_open', True):
+        full_html = '<div class="full-list">'
+        for t_col in t_cols:
+            full_html += build_day_item(t_col, row_g, row_s, date_mapping, LNG)
+        full_html += '</div>'
+        st.markdown(full_html, unsafe_allow_html=True)
 
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.subheader(f"🚨 {L['appeal_head']}")
