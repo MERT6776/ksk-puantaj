@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 # ------------------------------------------------------------------
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
-DOGRULAMA_KELIMESI = "RÖNESANS"   # robot olmadığını doğrulama kelimesi
+DOGRULAMA_KELIMESI = "RÖNESANS"   # doğrulama ekranında yazılması gereken kelime
 
 # ------------------------------------------------------------------
 # 2. DİL VE VERİ SÖZLÜĞÜ
@@ -31,9 +31,13 @@ LANGS = {
         "topic_opts": ["Seçiniz...", "Puantaj İtirazı", "Mesai İtirazı", "Diğer"],
         "summary": "AY ÖZETİ", "s_normal": "Normal Çalışma", "s_pazar": "Pazar Çalışması",
         "s_tatil": "Hafta Tatili", "s_bayram": "Bayram", "s_yok": "Çalışılmadı",
-        "robot_label": "GÜVENLİK DOĞRULAMASI",
-        "robot_help": f"Robot olmadığınızı doğrulamak için «{DOGRULAMA_KELIMESI}» yazın.",
-        "robot_err": f"Lütfen doğrulama alanına «{DOGRULAMA_KELIMESI}» yazın."
+        "verify_title": "GÜVENLİK DOĞRULAMASI",
+        "verify_desc": f"Sisteme giriş için aşağıdaki alana «{DOGRULAMA_KELIMESI}» yazınız.",
+        "verify_field": "DOĞRULAMA", "verify_btn": "DOĞRULA VE GİR",
+        "verify_err": f"Doğrulama başarısız. Lütfen «{DOGRULAMA_KELIMESI}» yazın.",
+        "back": "← Geri",
+        "disc_title": "BİLGİLENDİRME",
+        "disc_text": "Sistemdeki veriler resmî veri değildir; güncellenebilir veri olup yalnızca bilgilendirme amaçlıdır."
     },
     "EN": {
         "title": "FILYOS HR PORTAL",
@@ -52,9 +56,13 @@ LANGS = {
         "topic_opts": ["Select...", "Payroll Objection", "Overtime Objection", "Other"],
         "summary": "MONTHLY SUMMARY", "s_normal": "Normal Work", "s_pazar": "Sunday Work",
         "s_tatil": "Weekend Off", "s_bayram": "Holiday", "s_yok": "Absent",
-        "robot_label": "SECURITY CHECK",
-        "robot_help": f"Type «{DOGRULAMA_KELIMESI}» to verify you are not a robot.",
-        "robot_err": f"Please type «{DOGRULAMA_KELIMESI}» in the verification field."
+        "verify_title": "SECURITY CHECK",
+        "verify_desc": f"Type «{DOGRULAMA_KELIMESI}» below to enter the system.",
+        "verify_field": "VERIFICATION", "verify_btn": "VERIFY & ENTER",
+        "verify_err": f"Verification failed. Please type «{DOGRULAMA_KELIMESI}».",
+        "back": "← Back",
+        "disc_title": "NOTICE",
+        "disc_text": "The data shown here is not official; it may be updated and is provided for informational purposes only."
     },
     "UZ": {
         "title": "FILYOS KADRLAR PORTALI",
@@ -73,9 +81,13 @@ LANGS = {
         "topic_opts": ["Tanlang...", "Puantaj e'tirozi", "Ish vaqti e'tirozi", "Boshqa"],
         "summary": "OYLIK HISOBOT", "s_normal": "Oddiy Ish", "s_pazar": "Yakshanba Ishi",
         "s_tatil": "Dam Olish", "s_bayram": "Bayram", "s_yok": "Ishlamadi",
-        "robot_label": "XAVFSIZLIK TEKSHIRUVI",
-        "robot_help": f"Robot emasligingizni tasdiqlash uchun «{DOGRULAMA_KELIMESI}» deb yozing.",
-        "robot_err": f"Iltimos, tekshiruv maydoniga «{DOGRULAMA_KELIMESI}» deb yozing."
+        "verify_title": "XAVFSIZLIK TEKSHIRUVI",
+        "verify_desc": f"Tizimga kirish uchun quyidagi maydonga «{DOGRULAMA_KELIMESI}» deb yozing.",
+        "verify_field": "TASDIQLASH", "verify_btn": "TASDIQLASH VA KIRISH",
+        "verify_err": f"Tasdiqlash muvaffaqiyatsiz. «{DOGRULAMA_KELIMESI}» deb yozing.",
+        "back": "← Orqaga",
+        "disc_title": "MA'LUMOT",
+        "disc_text": "Tizimdagi ma'lumotlar rasmiy emas; yangilanishi mumkin va faqat ma'lumot uchun beriladi."
     }
 }
 
@@ -94,7 +106,7 @@ AYLAR_TR = {1: "OCAK", 2: "ŞUBAT", 3: "MART", 4: "NİSAN", 5: "MAYIS", 6: "HAZ�
 GUNLER_TR = ["PZT", "SALI", "ÇAR", "PER", "CUMA", "CMT", "PAZ"]
 
 # ------------------------------------------------------------------
-# YENİ RENK PALETLERİ (daha modern)
+# RENK PALETLERİ
 # ------------------------------------------------------------------
 THEMES = {
     "Kurumsal Koyu": {"bg_grad_1": "#0a0f1e", "bg_grad_2": "#16213e", "card_bg": "rgba(255,255,255,0.06)",
@@ -117,6 +129,8 @@ THEMES = {
 if 'lang' not in st.session_state: st.session_state['lang'] = "TR"
 if 'theme' not in st.session_state: st.session_state['theme'] = "Kurumsal Koyu"
 if 'logged_in' not in st.session_state: st.session_state['logged_in'] = False
+if 'awaiting_verify' not in st.session_state: st.session_state['awaiting_verify'] = False
+if 'pending_user' not in st.session_state: st.session_state['pending_user'] = None
 
 L = LANGS[st.session_state['lang']]
 T = THEMES[st.session_state['theme']]
@@ -127,7 +141,6 @@ start_hour, end_hour = 8, 18
 curr_decimal = now_tr.hour + now_tr.minute / 60
 shift_pct = max(0, min(100, (curr_decimal - start_hour) / (end_hour - start_hour) * 100))
 
-# KSK kaldırıldı
 ay_baslik = f"{AYLAR_TR[now_tr.month]} {now_tr.year} {L['month_title']}"
 
 # ------------------------------------------------------------------
@@ -144,6 +157,7 @@ body {{ background: linear-gradient(135deg, {T["bg_grad_1"]} 0%, {T["bg_grad_2"]
 
 .portal-title {{ text-align: center; color: {T["text_main"]}; letter-spacing: 1.5px; font-weight: 900; margin-bottom: 8px; font-size: 27px; line-height: 1.25; }}
 .month-title {{ text-align: center; color: {T["accent"]}; font-size: 18px; font-weight: 900; margin: -2px 0 24px; letter-spacing: 1.5px; }}
+.verify-note {{ text-align: center; color: {T["text_soft"]}; font-size: 14px; font-weight: 600; margin-bottom: 18px; }}
 
 .user-header {{ font-size: 30px; font-weight: 900; color: {T["text_main"]}; margin-bottom: 4px; line-height: 1.2; }}
 .user-sub {{ font-size: 16px; font-weight: 700; color: {T["text_soft"]}; margin-bottom: 18px; text-transform: uppercase; letter-spacing: 0.5px; }}
@@ -153,6 +167,11 @@ body {{ background: linear-gradient(135deg, {T["bg_grad_1"]} 0%, {T["bg_grad_2"]
     padding: 22px; margin-bottom: 20px; color: {T["text_main"]}; box-shadow: {T["shadow"]}; }}
 .shift-container {{ width: 100%; background: rgba(128,128,128,0.22); border-radius: 999px; height: 16px; margin: 14px 0; border: 1px solid {T["card_border"]}; overflow: hidden; }}
 .shift-bar {{ width: {shift_pct}%; height: 100%; background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}); border-radius: 999px; transition: width .4s ease; }}
+
+/* BİLGİLENDİRME KUTUSU */
+.info-banner {{ background-color: {T["card_bg"]}; border-left: 5px solid {T["accent"]}; padding: 15px 16px; border-radius: 10px; margin-bottom: 20px; box-shadow: {T["shadow"]}; }}
+.info-title {{ margin: 0; color: {T["accent"]}; font-size: 14px; font-weight: 900; letter-spacing: 1px; }}
+.info-text {{ margin: 6px 0 0 0; font-size: 13.5px; font-weight: 600; color: {T["text_main"]}; opacity: 0.92; }}
 
 /* AY ÖZETİ KARTI */
 .ozet-card {{ background: {T["card_bg"]}; border: 1px solid {T["card_border"]}; border-radius: 18px; padding: 22px; margin-bottom: 20px; box-shadow: {T["shadow"]}; }}
@@ -276,7 +295,6 @@ def get_status_class(durum):
     }.get(durum, "status-default")
 
 def norm_key(v):
-    """Giriş karşılaştırmasını kırılmaz yapar: '2000.0' -> '2000', boşlukları temizler."""
     s = str(v).strip()
     if s.endswith(".0"):
         s = s[:-2]
@@ -285,9 +303,9 @@ def norm_key(v):
 df = load_data()
 
 # ------------------------------------------------------------------
-# LOGIN EKRANI
+# EKRAN 1 — GİRİŞ (Kullanıcı Adı + Doğum Yılı)
 # ------------------------------------------------------------------
-if not st.session_state['logged_in']:
+if not st.session_state['logged_in'] and not st.session_state['awaiting_verify']:
     st.markdown(f"<h1 class='portal-title'>{L['title']}</h1>", unsafe_allow_html=True)
     st.markdown(f"<div class='month-title'>{ay_baslik}</div>", unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -301,26 +319,48 @@ if not st.session_state['logged_in']:
 
     sicil = st.text_input(L['sicil'])
     sifre = st.text_input(L['pass'], type="password")
-    dogrulama = st.text_input(L['robot_label'], help=L['robot_help'])
-    st.caption("🔒 " + L['robot_help'])
 
     if st.button(L['login']):
-        if str(dogrulama).strip().upper() != DOGRULAMA_KELIMESI:
-            st.warning("🤖 " + L['robot_err'])
-        elif df is not None:
+        if df is not None:
             fiori_col = df['FİORİ NO'].map(norm_key)
             dogum_col = df['DOĞUM YILI'].map(norm_key)
             res = df[(fiori_col == norm_key(sicil)) & (dogum_col == norm_key(sifre))]
             if not res.empty:
-                st.session_state['user_data'] = res
-                st.session_state['logged_in'] = True
+                st.session_state['pending_user'] = res
+                st.session_state['awaiting_verify'] = True
                 st.rerun()
             else:
                 st.error("❌ " + L['err'])
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------
-# ANA EKRAN
+# EKRAN 2 — DOĞRULAMA (RÖNESANS yazmadan giremez)
+# ------------------------------------------------------------------
+elif st.session_state['awaiting_verify'] and not st.session_state['logged_in']:
+    st.markdown(f"<h1 class='portal-title'>🔐 {L['verify_title']}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<div class='verify-note'>{L['verify_desc']}</div>", unsafe_allow_html=True)
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+
+    dogrulama = st.text_input(L['verify_field'], placeholder=DOGRULAMA_KELIMESI)
+
+    if st.button(L['verify_btn']):
+        if str(dogrulama).strip().upper() == DOGRULAMA_KELIMESI:
+            st.session_state['user_data'] = st.session_state['pending_user']
+            st.session_state['logged_in'] = True
+            st.session_state['awaiting_verify'] = False
+            st.session_state['pending_user'] = None
+            st.rerun()
+        else:
+            st.error("🤖 " + L['verify_err'])
+
+    if st.button(L['back']):
+        st.session_state['awaiting_verify'] = False
+        st.session_state['pending_user'] = None
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ------------------------------------------------------------------
+# EKRAN 3 — ANA PANEL
 # ------------------------------------------------------------------
 else:
     u_df = st.session_state['user_data']
@@ -337,14 +377,15 @@ else:
     with ust3:
         if st.button("🚪 " + L['logout'], use_container_width=True):
             st.session_state['logged_in'] = False
+            st.session_state['awaiting_verify'] = False
             st.session_state['user_data'] = None
+            st.session_state['pending_user'] = None
             st.rerun()
 
     L = LANGS[st.session_state['lang']]
     row_g = u_df[u_df['N-M'].astype(str).str.contains('Gün', na=False, case=False)].iloc[0]
     row_s = u_df[u_df['N-M'].astype(str).str.contains('SAAT', na=False, case=False)].iloc[0]
 
-    # Tarih sütunları
     t_cols = [c for c in df.columns if isinstance(c, (datetime, pd.Timestamp))
               or '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
     date_mapping = {}
@@ -355,7 +396,6 @@ else:
             last_date = dt_obj
         date_mapping[t_col] = dt_obj
 
-    # Sayımlar (AY ÖZETİ için)
     cnt = {"N": 0, "HTÇ": 0, "HT": 0, "BAYRAM": 0, "Üİ": 0}
     calc_total = 0
     for t_col in t_cols:
@@ -378,7 +418,6 @@ else:
     except Exception:
         pass
 
-    # Selamlama (baret emojisi kaldırıldı)
     hour_greet = now_tr.hour
     greet_txt = (L["welcome_morning"] if 5 <= hour_greet < 12 else
                  L["welcome_day"] if 12 <= hour_greet < 18 else
@@ -387,6 +426,14 @@ else:
     st.write("")
     st.markdown(f'<div class="user-header">{greet_txt}, {row_g["AD SOYAD"]}</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="user-sub">{row_g["GÖREVİ"]}</div>', unsafe_allow_html=True)
+
+    # BİLGİLENDİRME KUTUSU
+    st.markdown(f"""
+        <div class="info-banner">
+            <h4 class="info-title">ℹ️ {L['disc_title']}</h4>
+            <p class="info-text">{L['disc_text']}</p>
+        </div>
+    """, unsafe_allow_html=True)
 
     # AY ÖZETİ KARTI
     st.markdown(f"""
@@ -404,7 +451,6 @@ else:
         </div>
     """, unsafe_allow_html=True)
 
-    # Mesai barı / paydos
     if curr_decimal < end_hour:
         st.markdown('<div class="shift-container"><div class="shift-bar"></div></div>', unsafe_allow_html=True)
         st.markdown(f'<div class="paydos-label">🏁 {L["paydos"]}: {end_hour}:00</div>', unsafe_allow_html=True)
@@ -445,7 +491,6 @@ else:
                 ''', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
-    # İTİRAZ MERKEZİ
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.subheader(f"🚨 {L['appeal_head']}")
     st.markdown(f'<p style="font-size:14px; font-weight:600; color:{T["text_soft"]}; margin-bottom:15px;"><i>{L["appeal_desc"]}</i></p>', unsafe_allow_html=True)
