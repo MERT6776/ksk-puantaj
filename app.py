@@ -311,7 +311,6 @@ df = load_data()
 # EKRAN 1 — GİRİŞ (Kullanıcı Adı + Doğum Yılı)
 # ------------------------------------------------------------------
 if not st.session_state['logged_in'] and not st.session_state['awaiting_verify']:
-    st.markdown(f"<h1 class='portal-title'>{L['title']}</h1>", unsafe_allow_html=True)
     st.markdown(f"<div class='month-title'>{ay_baslik}</div>", unsafe_allow_html=True)
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 
@@ -444,12 +443,6 @@ else:
             </div>
         </div>
     """, unsafe_allow_html=True)
-
-    if curr_decimal < end_hour:
-        st.markdown('<div class="shift-container"><div class="shift-bar"></div></div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="paydos-label">🏁 {L["paydos"]}: {end_hour}:00</div>', unsafe_allow_html=True)
-    else:
-        st.success(f"✅ {L['shift_end']}")
 
     st.write("---")
 
