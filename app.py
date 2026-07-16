@@ -8,86 +8,107 @@ from datetime import datetime, timedelta
 # ------------------------------------------------------------------
 st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
 
+DOGRULAMA_KELIMESI = "RÖNESANS"   # robot olmadığını doğrulama kelimesi
+
 # ------------------------------------------------------------------
 # 2. DİL VE VERİ SÖZLÜĞÜ
 # ------------------------------------------------------------------
 LANGS = {
     "TR": {
-        "title": "FİLYOS FAZ-2 İNSAN KAYNAKLARI PORTALI",
+        "title": "FİLYOS İNSAN KAYNAKLARI PORTALI",
         "welcome_morning": "Günaydın", "welcome_day": "İyi Günler",
         "welcome_evening": "İyi Akşamlar", "welcome_night": "İyi Geceler",
         "sicil": "KULLANICI ADI", "pass": "DOĞUM YILI", "login": "GİRİŞ YAP",
-        "paid_days": "Ödenecek Gün", "total_over": "TOPLAM MESAİ SAATİ",
+        "paid_days": "Ödenecek Gün", "total_over": "Toplam Mesai (sa)",
         "week": "HAFTA", "week_suffix": "PUANTAJ DURUM TAKVİMİ",
         "appeal_head": "İtiraz Merkezi",
         "appeal_desc": "Puantaj veya mesai kayıtlarınızda bir eksiklik ya da hata olduğunu düşünüyorsanız, aşağıdaki formu doldurarak itirazınızı iletebilirsiniz.",
-        "send": "ALİCAN BAYAT'A GÖNDER", "lang": "Dil Seçimi", "note": "Ek Notunuz",
+        "send": "İTİRAZ ET", "lang": "Dil Seçimi", "note": "Ek Notunuz",
         "legend": "KISALTMALAR VE ANLAMLARI", "shift_end": "Mesai Tamamlandı",
         "theme": "Tema Seçimi", "month_title": "PERSONEL PUANTAJI", "overtime": "SAAT",
-        "logout": "ÇIKIŞ YAP", "sys_note_title": "SİSTEM BİLGİLENDİRMESİ",
-        "update_info": "Sisteme 22 Mart tarihine kadar olan puantaj ve mesai kayıtları işlenmiştir. Takip eden günlerin veri girişi devam etmektedir.",
-        "paydos": "Paydos Saati", "subject": "Konu", "err": "Bilgiler hatalı, tekrar deneyin.",
-        "topic_opts": ["Seçiniz...", "Puantaj İtirazı", "Mesai İtirazı", "Diğer"]
+        "logout": "ÇIKIŞ YAP", "paydos": "Paydos Saati",
+        "subject": "Konu", "err": "Bilgiler hatalı, tekrar deneyin.",
+        "topic_opts": ["Seçiniz...", "Puantaj İtirazı", "Mesai İtirazı", "Diğer"],
+        "summary": "AY ÖZETİ", "s_normal": "Normal Çalışma", "s_pazar": "Pazar Çalışması",
+        "s_tatil": "Hafta Tatili", "s_bayram": "Bayram", "s_yok": "Çalışılmadı",
+        "robot_label": "GÜVENLİK DOĞRULAMASI",
+        "robot_help": f"Robot olmadığınızı doğrulamak için «{DOGRULAMA_KELIMESI}» yazın.",
+        "robot_err": f"Lütfen doğrulama alanına «{DOGRULAMA_KELIMESI}» yazın."
     },
     "EN": {
-        "title": "FILYOS PHASE-2 HR PORTAL",
+        "title": "FILYOS HR PORTAL",
         "welcome_morning": "Good Morning", "welcome_day": "Good Day",
         "welcome_evening": "Good Evening", "welcome_night": "Good Night",
         "sicil": "USERNAME", "pass": "BIRTH YEAR", "login": "LOGIN",
-        "paid_days": "Paid Days", "total_over": "TOTAL OVERTIME HOURS",
+        "paid_days": "Paid Days", "total_over": "Total Overtime (hrs)",
         "week": "WEEK", "week_suffix": "STATUS TABLE",
         "appeal_head": "Appeal Center",
         "appeal_desc": "If you believe there is an error or omission in your payroll or overtime records, you can submit your objection by filling out the form below.",
-        "send": "SEND", "lang": "Language", "note": "Note",
+        "send": "SUBMIT APPEAL", "lang": "Language", "note": "Note",
         "legend": "LEGEND", "shift_end": "Shift Completed",
         "theme": "Theme", "month_title": "PERSONNEL PAYROLL", "overtime": "HRS",
-        "logout": "LOGOUT", "sys_note_title": "SYSTEM NOTICE",
-        "update_info": "Payroll and overtime records up to March 22 have been entered into the system. Data entry for subsequent days is ongoing.",
-        "paydos": "End of Shift", "subject": "Subject", "err": "Invalid credentials, please try again.",
-        "topic_opts": ["Select...", "Payroll Objection", "Overtime Objection", "Other"]
+        "logout": "LOGOUT", "paydos": "End of Shift",
+        "subject": "Subject", "err": "Invalid credentials, please try again.",
+        "topic_opts": ["Select...", "Payroll Objection", "Overtime Objection", "Other"],
+        "summary": "MONTHLY SUMMARY", "s_normal": "Normal Work", "s_pazar": "Sunday Work",
+        "s_tatil": "Weekend Off", "s_bayram": "Holiday", "s_yok": "Absent",
+        "robot_label": "SECURITY CHECK",
+        "robot_help": f"Type «{DOGRULAMA_KELIMESI}» to verify you are not a robot.",
+        "robot_err": f"Please type «{DOGRULAMA_KELIMESI}» in the verification field."
     },
     "UZ": {
-        "title": "FİLYOS FAZ-2 KADRLAR PORTALI",
+        "title": "FILYOS KADRLAR PORTALI",
         "welcome_morning": "Xayrli tong", "welcome_day": "Xayrli kun",
         "welcome_evening": "Xayrli kech", "welcome_night": "Xayrli tun",
         "sicil": "FOYDALANUVCHI NOMI", "pass": "TUG'ILGAN YILI", "login": "KIRISH",
-        "paid_days": "To'lanadigan Kun", "total_over": "UMUMIY ISH SOATI",
+        "paid_days": "To'lanadigan Kun", "total_over": "Umumiy Ish (soat)",
         "week": "HAFTA", "week_suffix": "PUANTAJ JADVALI",
         "appeal_head": "E'tiroz Markazi",
         "appeal_desc": "Ish vaqti yoki qo'shimcha soatlar yozuvlarida xatolik bor deb hisoblasangiz, quyidagi shaklni to'ldirib e'tirozingizni yuborishingiz mumkin.",
-        "send": "YUBORISH", "lang": "Til", "note": "Eslatma",
+        "send": "E'TIROZ YUBORISH", "lang": "Til", "note": "Eslatma",
         "legend": "QISQARTMALAR", "shift_end": "Ish yakunlandi",
         "theme": "Mavzu", "month_title": "XODIMLAR PUANTAJI", "overtime": "SOAT",
-        "logout": "CHIQISH", "sys_note_title": "TIZIM MA'LUMOTI",
-        "update_info": "Tizimga 22-martgacha bo'lgan ish vaqti va qo'shimcha soatlar kiritilgan. Keyingi kunlar uchun ma'lumotlarni kiritish davom etmoqda.",
-        "paydos": "Ish tugashi", "subject": "Mavzu", "err": "Ma'lumot noto'g'ri, qayta urinib ko'ring.",
-        "topic_opts": ["Tanlang...", "Puantaj e'tirozi", "Ish vaqti e'tirozi", "Boshqa"]
+        "logout": "CHIQISH", "paydos": "Ish tugashi",
+        "subject": "Mavzu", "err": "Ma'lumot noto'g'ri, qayta urinib ko'ring.",
+        "topic_opts": ["Tanlang...", "Puantaj e'tirozi", "Ish vaqti e'tirozi", "Boshqa"],
+        "summary": "OYLIK HISOBOT", "s_normal": "Oddiy Ish", "s_pazar": "Yakshanba Ishi",
+        "s_tatil": "Dam Olish", "s_bayram": "Bayram", "s_yok": "Ishlamadi",
+        "robot_label": "XAVFSIZLIK TEKSHIRUVI",
+        "robot_help": f"Robot emasligingizni tasdiqlash uchun «{DOGRULAMA_KELIMESI}» deb yozing.",
+        "robot_err": f"Iltimos, tekshiruv maydoniga «{DOGRULAMA_KELIMESI}» deb yozing."
     }
 }
 
+# KISALTMALAR (HTÇ = Pazar Çalışması, HÇ kaldırıldı)
 STATUS_MAP = {
-    "HTÇ": "Şirkete Fazladan Pazar Çalışması", "HÇ": "Kendine Fazladan Pazar Çalışması",
-    "HT": "Hafta Tatili", "Üİ": "Personel Çalışmadı", "N": "Normal Çalışma",
-    "B": "Bayram Tatili", "BÇ": "Bayramda Çalışma"
+    "N": "Normal Çalışma",
+    "HTÇ": "Pazar Çalışması",
+    "HT": "Hafta Tatili",
+    "B": "Bayram Tatili",
+    "BÇ": "Bayramda Çalışma",
+    "Üİ": "Personel Çalışmadı"
 }
 
 AYLAR_TR = {1: "OCAK", 2: "ŞUBAT", 3: "MART", 4: "NİSAN", 5: "MAYIS", 6: "HAZİRAN",
             7: "TEMMUZ", 8: "AĞUSTOS", 9: "EYLÜL", 10: "EKİM", 11: "KASIM", 12: "ARALIK"}
 GUNLER_TR = ["PZT", "SALI", "ÇAR", "PER", "CUMA", "CMT", "PAZ"]
 
+# ------------------------------------------------------------------
+# YENİ RENK PALETLERİ (daha modern)
+# ------------------------------------------------------------------
 THEMES = {
-    "Kurumsal Koyu": {"bg_grad_1": "#0b1220", "bg_grad_2": "#1e293b", "card_bg": "rgba(255,255,255,0.07)",
-        "card_border": "rgba(255,255,255,0.14)", "text_main": "#ffffff", "text_soft": "#cbd5e1",
-        "accent": "#38bdf8", "accent_2": "#f59e0b", "clock": "#ffd700", "input_bg": "rgba(15,23,42,0.85)",
-        "input_text": "#ffffff", "shadow": "0 12px 30px rgba(0,0,0,0.35)", "overlay": "rgba(2, 6, 23, 0.55)"},
-    "Açık Kurumsal": {"bg_grad_1": "#f8fafc", "bg_grad_2": "#e2e8f0", "card_bg": "rgba(255,255,255,0.94)",
-        "card_border": "rgba(15,23,42,0.12)", "text_main": "#0f172a", "text_soft": "#475569",
-        "accent": "#1d4ed8", "accent_2": "#b45309", "clock": "#0f172a", "input_bg": "#ffffff",
-        "input_text": "#0f172a", "shadow": "0 10px 25px rgba(15,23,42,0.08)", "overlay": "rgba(255,255,255,0.35)"},
-    "Premium Cam": {"bg_grad_1": "#0f172a", "bg_grad_2": "#1e1b4b", "card_bg": "rgba(255,255,255,0.09)",
-        "card_border": "rgba(255,255,255,0.16)", "text_main": "#ffffff", "text_soft": "#dbeafe",
-        "accent": "#60a5fa", "accent_2": "#fbbf24", "clock": "#60a5fa", "input_bg": "rgba(15,23,42,0.85)",
-        "input_text": "#ffffff", "shadow": "0 16px 40px rgba(0,0,0,0.40)", "overlay": "rgba(3, 7, 18, 0.50)"}
+    "Kurumsal Koyu": {"bg_grad_1": "#0a0f1e", "bg_grad_2": "#16213e", "card_bg": "rgba(255,255,255,0.06)",
+        "card_border": "rgba(148,163,184,0.20)", "text_main": "#f1f5f9", "text_soft": "#94a3b8",
+        "accent": "#2dd4bf", "accent_2": "#818cf8", "clock": "#5eead4", "input_bg": "rgba(15,23,42,0.75)",
+        "input_text": "#f1f5f9", "shadow": "0 14px 34px rgba(0,0,0,0.38)", "overlay": "rgba(4, 8, 20, 0.55)"},
+    "Açık Kurumsal": {"bg_grad_1": "#f1f5f9", "bg_grad_2": "#dbe4f0", "card_bg": "rgba(255,255,255,0.95)",
+        "card_border": "rgba(15,23,42,0.10)", "text_main": "#0f172a", "text_soft": "#475569",
+        "accent": "#0d9488", "accent_2": "#4f46e5", "clock": "#0f766e", "input_bg": "#ffffff",
+        "input_text": "#0f172a", "shadow": "0 10px 26px rgba(15,23,42,0.10)", "overlay": "rgba(255,255,255,0.30)"},
+    "Premium Mor": {"bg_grad_1": "#0f0c29", "bg_grad_2": "#302b63", "card_bg": "rgba(255,255,255,0.08)",
+        "card_border": "rgba(216,180,254,0.22)", "text_main": "#faf5ff", "text_soft": "#ddd6fe",
+        "accent": "#c084fc", "accent_2": "#f472b6", "clock": "#e9d5ff", "input_bg": "rgba(20,15,45,0.78)",
+        "input_text": "#faf5ff", "shadow": "0 16px 42px rgba(0,0,0,0.45)", "overlay": "rgba(10, 6, 30, 0.50)"}
 }
 
 # ------------------------------------------------------------------
@@ -106,7 +127,8 @@ start_hour, end_hour = 8, 18
 curr_decimal = now_tr.hour + now_tr.minute / 60
 shift_pct = max(0, min(100, (curr_decimal - start_hour) / (end_hour - start_hour) * 100))
 
-ay_baslik = f"KSK {AYLAR_TR[now_tr.month]} {now_tr.year} {L['month_title']}"
+# KSK kaldırıldı
+ay_baslik = f"{AYLAR_TR[now_tr.month]} {now_tr.year} {L['month_title']}"
 
 # ------------------------------------------------------------------
 # 3. CSS / TEMA
@@ -132,8 +154,15 @@ body {{ background: linear-gradient(135deg, {T["bg_grad_1"]} 0%, {T["bg_grad_2"]
 .shift-container {{ width: 100%; background: rgba(128,128,128,0.22); border-radius: 999px; height: 16px; margin: 14px 0; border: 1px solid {T["card_border"]}; overflow: hidden; }}
 .shift-bar {{ width: {shift_pct}%; height: 100%; background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}); border-radius: 999px; transition: width .4s ease; }}
 
-div[data-testid="stMetric"] {{ background: {T["card_bg"]}; border: 1px solid {T["card_border"]}; border-radius: 16px; padding: 14px 16px; box-shadow: {T["shadow"]}; }}
-[data-testid="stMetricLabel"], [data-testid="stMetricValue"] {{ color: {T["text_main"]} !important; }}
+/* AY ÖZETİ KARTI */
+.ozet-card {{ background: {T["card_bg"]}; border: 1px solid {T["card_border"]}; border-radius: 18px; padding: 22px; margin-bottom: 20px; box-shadow: {T["shadow"]}; }}
+.ozet-head {{ display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 900; letter-spacing: 1.5px; color: {T["accent"]}; text-transform: uppercase; margin-bottom: 16px; }}
+.ozet-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 12px; }}
+.ozet-tile {{ background: rgba(148,163,184,0.08); border: 1px solid {T["card_border"]}; border-radius: 14px; padding: 14px 8px; text-align: center; }}
+.ozet-num {{ font-size: 26px; font-weight: 900; color: {T["text_main"]}; line-height: 1; }}
+.ozet-num.hl1 {{ color: {T["accent"]}; }}
+.ozet-num.hl2 {{ color: {T["accent_2"]}; }}
+.ozet-lbl {{ font-size: 11px; font-weight: 700; color: {T["text_soft"]}; margin-top: 7px; text-transform: uppercase; letter-spacing: 0.4px; }}
 
 .stExpander {{ background: {T["card_bg"]} !important; border: 1px solid {T["card_border"]} !important; border-radius: 14px !important; margin-bottom: 12px !important; box-shadow: {T["shadow"]}; }}
 summary {{ color: {T["text_main"]} !important; font-weight: 800 !important; }}
@@ -148,13 +177,12 @@ summary {{ color: {T["text_main"]} !important; font-weight: 800 !important; }}
 .gun-text {{ font-size: 11px; font-weight: 800; line-height: 1; opacity: 0.9; }}
 .mesai-badge {{ background: #facc15; color: #111; font-size: 12px; padding: 2px 8px; border-radius: 6px; margin-top: 3px; font-weight: 900; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }}
 
-.status-n {{ background: linear-gradient(135deg, #15803d, #166534); border: 1px solid #22c55e; }}
+.status-n {{ background: linear-gradient(135deg, #0d9488, #0f766e); border: 1px solid #2dd4bf; }}
 .status-htc {{ background: linear-gradient(135deg, #b45309, #92400e); border: 1px solid #fbbf24; }}
-.status-hc {{ background: linear-gradient(135deg, #1d4ed8, #1e40af); border: 1px solid #60a5fa; }}
-.status-ht {{ background: linear-gradient(135deg, #312e81, #3730a3); border: 1px solid #818cf8; }}
-.status-b {{ background: linear-gradient(135deg, #991b1b, #7f1d1d); border: 1px solid #f87171; }}
+.status-ht {{ background: linear-gradient(135deg, #4338ca, #3730a3); border: 1px solid #818cf8; }}
+.status-b {{ background: linear-gradient(135deg, #9f1239, #881337); border: 1px solid #fb7185; }}
 .status-bc {{ background: linear-gradient(135deg, #c2410c, #ea580c); border: 1px solid #fb923c; }}
-.status-ui {{ background: linear-gradient(135deg, #4b5563, #374151); border: 1px solid #9ca3af; }}
+.status-ui {{ background: linear-gradient(135deg, #475569, #334155); border: 1px solid #94a3b8; }}
 .status-default {{ background: linear-gradient(135deg, #334155, #1e293b); border: 1px solid #64748b; }}
 
 .stTextInput > div > div > input, .stTextArea textarea, .stSelectbox > div > div {{
@@ -165,11 +193,7 @@ summary {{ color: {T["text_main"]} !important; font-weight: 800 !important; }}
 .stButton > button, .stLinkButton > a {{ width: 100%; border-radius: 12px !important; border: none !important;
     font-weight: 900 !important; min-height: 46px; letter-spacing: 0.5px;
     background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}) !important;
-    color: #0f172a !important; text-shadow: none !important; box-shadow: 0 10px 22px rgba(0,0,0,0.18); }}
-
-.info-banner {{ background-color: rgba(234, 179, 8, 0.14); border-left: 5px solid #eab308; padding: 15px 16px; border-radius: 10px; margin-bottom: 20px; }}
-.info-title {{ margin: 0; color: #eab308; font-size: 15px; font-weight: 900; letter-spacing: 1px; }}
-.info-text {{ margin: 6px 0 0 0; font-size: 14px; font-weight: 600; color: {T["text_main"]}; opacity: 0.9; }}
+    color: #0b1020 !important; text-shadow: none !important; box-shadow: 0 10px 22px rgba(0,0,0,0.20); }}
 
 .mert-signature {{ position: fixed; bottom: 12px; left: 15px; font-size: 12px; font-weight: 900; color: {T["text_soft"]}; opacity: 0.75; letter-spacing: 2px; z-index: 1000; }}
 
@@ -178,6 +202,7 @@ summary {{ color: {T["text_main"]} !important; font-weight: 800 !important; }}
     .user-header {{ font-size: 24px; }} #live-clock {{ font-size: 16px; }}
     .day-grid {{ grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }}
     .day-item {{ min-height: 80px; padding: 5px 2px; }}
+    .ozet-grid {{ grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 9px; }}
 }}
 </style>
 
@@ -246,14 +271,12 @@ def parse_date_super_safe(t_col, last_date=None):
 def get_status_class(durum):
     durum = str(durum).strip().upper()
     return {
-        "N": "status-n", "HTÇ": "status-htc", "HÇ": "status-hc", "HT": "status-ht",
+        "N": "status-n", "HTÇ": "status-htc", "HT": "status-ht",
         "BÇ": "status-bc", "B": "status-b", "Üİ": "status-ui"
     }.get(durum, "status-default")
 
 def norm_key(v):
-    """FİORİ NO ve DOĞUM YILI karşılaştırmasını kırılmaz yapar.
-    Boş hücre yüzünden sütun float olsa bile '2000.0' -> '2000' yapar,
-    baştaki/sondaki boşlukları temizler."""
+    """Giriş karşılaştırmasını kırılmaz yapar: '2000.0' -> '2000', boşlukları temizler."""
     s = str(v).strip()
     if s.endswith(".0"):
         s = s[:-2]
@@ -278,9 +301,13 @@ if not st.session_state['logged_in']:
 
     sicil = st.text_input(L['sicil'])
     sifre = st.text_input(L['pass'], type="password")
+    dogrulama = st.text_input(L['robot_label'], help=L['robot_help'])
+    st.caption("🔒 " + L['robot_help'])
 
     if st.button(L['login']):
-        if df is not None:
+        if str(dogrulama).strip().upper() != DOGRULAMA_KELIMESI:
+            st.warning("🤖 " + L['robot_err'])
+        elif df is not None:
             fiori_col = df['FİORİ NO'].map(norm_key)
             dogum_col = df['DOĞUM YILI'].map(norm_key)
             res = df[(fiori_col == norm_key(sicil)) & (dogum_col == norm_key(sifre))]
@@ -317,32 +344,9 @@ else:
     row_g = u_df[u_df['N-M'].astype(str).str.contains('Gün', na=False, case=False)].iloc[0]
     row_s = u_df[u_df['N-M'].astype(str).str.contains('SAAT', na=False, case=False)].iloc[0]
 
-    hour_greet = now_tr.hour
-    greet_txt = (L["welcome_morning"] if 5 <= hour_greet < 12 else
-                 L["welcome_day"] if 12 <= hour_greet < 18 else
-                 L["welcome_evening"] if 18 <= hour_greet < 23 else L["welcome_night"])
-
-    st.write("")
-    st.markdown(f'<div class="user-header">{greet_txt}, {row_g["AD SOYAD"]} 👷‍♂️</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="user-sub">{row_g["GÖREVİ"]}</div>', unsafe_allow_html=True)
-
-    st.markdown(f"""
-        <div class="info-banner">
-            <h4 class="info-title">📌 {L['sys_note_title']}</h4>
-            <p class="info-text">{L['update_info']}</p>
-        </div>
-    """, unsafe_allow_html=True)
-
-    if curr_decimal < end_hour:
-        st.markdown('<div class="shift-container"><div class="shift-bar"></div></div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="paydos-label">🏁 {L["paydos"]}: {end_hour}:00</div>', unsafe_allow_html=True)
-    else:
-        st.success(f"✅ {L['shift_end']}")
-
     # Tarih sütunları
     t_cols = [c for c in df.columns if isinstance(c, (datetime, pd.Timestamp))
               or '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
-
     date_mapping = {}
     last_date = None
     for t_col in t_cols:
@@ -351,23 +355,61 @@ else:
             last_date = dt_obj
         date_mapping[t_col] = dt_obj
 
-    # Toplam mesai
+    # Sayımlar (AY ÖZETİ için)
+    cnt = {"N": 0, "HTÇ": 0, "HT": 0, "BAYRAM": 0, "Üİ": 0}
     calc_total = 0
     for t_col in t_cols:
+        d = str(row_g.get(t_col, "")).strip().upper()
+        if d == "N": cnt["N"] += 1
+        elif d == "HTÇ": cnt["HTÇ"] += 1
+        elif d == "HT": cnt["HT"] += 1
+        elif d in ("B", "BÇ"): cnt["BAYRAM"] += 1
+        elif d == "Üİ": cnt["Üİ"] += 1
         m_val = str(row_s.get(t_col, "")).strip()
         if m_val not in ["", "0", "0.0", "nan", "None"]:
             try:
                 calc_total += float(m_val.replace(',', '.'))
             except Exception:
                 pass
-    toplam_mesai_gosterim = f"{int(calc_total)}" if calc_total % 1 == 0 else f"{calc_total}"
+    toplam_mesai = f"{int(calc_total)}" if calc_total % 1 == 0 else f"{calc_total}"
+    odenecek = row_g.get("Personele Ödenecek Gün", 0)
+    try:
+        odenecek = int(odenecek) if float(odenecek) % 1 == 0 else odenecek
+    except Exception:
+        pass
+
+    # Selamlama (baret emojisi kaldırıldı)
+    hour_greet = now_tr.hour
+    greet_txt = (L["welcome_morning"] if 5 <= hour_greet < 12 else
+                 L["welcome_day"] if 12 <= hour_greet < 18 else
+                 L["welcome_evening"] if 18 <= hour_greet < 23 else L["welcome_night"])
 
     st.write("")
-    c1, c2 = st.columns(2)
-    with c1:
-        st.metric(L['paid_days'], row_g.get("Personele Ödenecek Gün", 0))
-    with c2:
-        st.metric(L['total_over'], toplam_mesai_gosterim)
+    st.markdown(f'<div class="user-header">{greet_txt}, {row_g["AD SOYAD"]}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="user-sub">{row_g["GÖREVİ"]}</div>', unsafe_allow_html=True)
+
+    # AY ÖZETİ KARTI
+    st.markdown(f"""
+        <div class="ozet-card">
+            <div class="ozet-head">📊 {L['summary']}</div>
+            <div class="ozet-grid">
+                <div class="ozet-tile"><div class="ozet-num hl1">{odenecek}</div><div class="ozet-lbl">{L['paid_days']}</div></div>
+                <div class="ozet-tile"><div class="ozet-num hl2">{toplam_mesai}</div><div class="ozet-lbl">{L['total_over']}</div></div>
+                <div class="ozet-tile"><div class="ozet-num">{cnt['N']}</div><div class="ozet-lbl">{L['s_normal']}</div></div>
+                <div class="ozet-tile"><div class="ozet-num">{cnt['HTÇ']}</div><div class="ozet-lbl">{L['s_pazar']}</div></div>
+                <div class="ozet-tile"><div class="ozet-num">{cnt['HT']}</div><div class="ozet-lbl">{L['s_tatil']}</div></div>
+                <div class="ozet-tile"><div class="ozet-num">{cnt['BAYRAM']}</div><div class="ozet-lbl">{L['s_bayram']}</div></div>
+                <div class="ozet-tile"><div class="ozet-num">{cnt['Üİ']}</div><div class="ozet-lbl">{L['s_yok']}</div></div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Mesai barı / paydos
+    if curr_decimal < end_hour:
+        st.markdown('<div class="shift-container"><div class="shift-bar"></div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="paydos-label">🏁 {L["paydos"]}: {end_hour}:00</div>', unsafe_allow_html=True)
+    else:
+        st.success(f"✅ {L['shift_end']}")
 
     st.write("---")
 
@@ -403,15 +445,15 @@ else:
                 ''', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
+    # İTİRAZ MERKEZİ
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.subheader(f"🚨 {L['appeal_head']}")
     st.markdown(f'<p style="font-size:14px; font-weight:600; color:{T["text_soft"]}; margin-bottom:15px;"><i>{L["appeal_desc"]}</i></p>', unsafe_allow_html=True)
 
     konu = st.selectbox(L['subject'], L['topic_opts'], label_visibility="collapsed")
     notunuz = st.text_area(L['note'])
-    if st.button(L['send']):
-        msg = f"İTİRAZ: {row_g['AD SOYAD']}\nKonu: {konu}\nNot: {notunuz}"
-        st.link_button("GÖNDER ➡️", f"https://wa.me/905435314160?text={urllib.parse.quote(msg)}")
+    msg = f"İTİRAZ: {row_g['AD SOYAD']}\nKonu: {konu}\nNot: {notunuz}"
+    st.link_button("🚨 " + L['send'], f"https://wa.me/905435314160?text={urllib.parse.quote(msg)}")
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="mert-signature">POWERED BY Mert DÜZCÜK</div>', unsafe_allow_html=True)
