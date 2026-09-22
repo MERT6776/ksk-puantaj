@@ -1,16 +1,23 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import urllib.parse
 import random
 import time
+import io
+import math
+import threading
 from datetime import datetime, timedelta
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
-st.set_page_config(page_title="Filyos İK Portal", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Filyos Örnek Puantaj", layout="centered", initial_sidebar_state="collapsed")
 
 MAIL_ADRES = "ret-filyos2A-ik@ronesans.com"
-LOGIN_LOCK_SEC = 180   # şifre 3 kez yanlış -> 3 dakika
-VERIFY_LOCK_SEC = 30   # kod 3 kez yanlış -> 30 saniye
+WHATSAPP_NO = "905459157444"          # 0545 915 7444 - Mert Düzcük
+LOGIN_LOCK_SEC = 180                  # şifre 3 kez yanlış -> 3 dakika
+VERIFY_LOCK_SEC = 30                  # kod 3 kez yanlış -> 30 saniye
 MAX_TRY = 3
+IDLE_SEC = 300                        # 5 dakika işlem yoksa otomatik çıkış
 
 LANG_NAMES = {"TR": "Türkçe", "EN": "English", "UZ": "O'zbek"}
 
@@ -32,17 +39,20 @@ LANGS = {
         "summary": "AY ÖZETİ", "full_title": "AYLIK VERİ", "ss_warn": "Bu ekrandaki bilgiler kişiye özeldir. Ekran görüntüsü / kayıt almak yasaktır; alınan görüntüler kimliğinizle işaretlenir.",
         "verify_title": "GÜVENLİK DOĞRULAMASI", "verify_desc": "Robot olmadığınızı doğrulamak için aşağıdaki kodu giriniz.",
         "verify_field": "DOĞRULAMA KODU", "verify_btn": "DOĞRULA VE GİR", "verify_err": "Kod hatalı, lütfen tekrar deneyin.",
-        "new_code": "🔄 Yeni Kod", "back": "← Geri",
+        "new_code": "Yeni Kod", "back": "Geri",
         "disc_title": "BİLGİLENDİRME",
         "disc_text": "Sistemdeki veriler resmî veri değildir; güncellenebilir veri olup yalnızca bilgilendirme amaçlıdır.",
         "expand_all": "TÜMÜNÜ AÇ", "collapse_all": "TÜMÜNÜ KAPAT",
-        "mail_ready": "Talebiniz hazırlandı. Aşağıdaki butona basınca mail uygulamanız açılır.", "open_mail": "MAİL UYGULAMASINI AÇ",
+        "mail_ready": "Talebiniz hazırlandı. Aşağıdaki butonlardan biriyle gönderebilirsiniz.", "open_mail": "MAİL UYGULAMASINI AÇ",
+        "open_wa": "WHATSAPP İLE GÖNDER",
         "m_id": "Sicil No", "m_name": "Ad Soyad", "m_role": "Görevi", "m_prefix": "İtiraz",
         "login_locked": "Çok fazla hatalı giriş. Lütfen bekleyin.",
         "verify_locked": "Çok fazla hatalı kod. Lütfen bekleyin.",
         "forgot_title": "Şifremi Unuttum", "forgot_desc": "Kullanıcı adınızı girin; bilgilerinizle birlikte İK'ya şifre talebi maili oluşturulur.",
         "forgot_btn": "TALEP OLUŞTUR", "forgot_subject": "Şifre Talebi",
-        "forgot_body": "Şifremi unuttum, yardımcı olabilir misiniz?"
+        "forgot_body": "Şifremi unuttum, yardımcı olabilir misiniz?",
+        "timeout": "5 dakika işlem yapılmadığı için güvenlik amacıyla oturum kapatıldı.",
+        "today": "BUGÜN"
     },
     "EN": {
         "welcome_morning": "Good Morning", "welcome_day": "Good Day", "welcome_evening": "Good Evening", "welcome_night": "Good Night",
@@ -58,17 +68,20 @@ LANGS = {
         "summary": "MONTHLY SUMMARY", "full_title": "MONTHLY DATA", "ss_warn": "The information here is personal. Screenshots and screen recording are prohibited; captures are marked with your identity.",
         "verify_title": "SECURITY CHECK", "verify_desc": "Enter the code below to verify you are not a robot.",
         "verify_field": "VERIFICATION CODE", "verify_btn": "VERIFY & ENTER", "verify_err": "Wrong code, please try again.",
-        "new_code": "🔄 New Code", "back": "← Back",
+        "new_code": "New Code", "back": "Back",
         "disc_title": "NOTICE",
         "disc_text": "The data shown here is not official; it may be updated and is provided for informational purposes only.",
         "expand_all": "EXPAND ALL", "collapse_all": "COLLAPSE ALL",
-        "mail_ready": "Your request is ready. Tap the button below to open your mail app.", "open_mail": "OPEN MAIL APP",
+        "mail_ready": "Your request is ready. Send it with one of the buttons below.", "open_mail": "OPEN MAIL APP",
+        "open_wa": "SEND VIA WHATSAPP",
         "m_id": "Employee ID", "m_name": "Full Name", "m_role": "Position", "m_prefix": "Appeal",
         "login_locked": "Too many failed logins. Please wait.",
         "verify_locked": "Too many wrong codes. Please wait.",
         "forgot_title": "Forgot Password", "forgot_desc": "Enter your username; a password request email with your details will be prepared for HR.",
         "forgot_btn": "CREATE REQUEST", "forgot_subject": "Password Reset Request",
-        "forgot_body": "I forgot my password, could you please help?"
+        "forgot_body": "I forgot my password, could you please help?",
+        "timeout": "You were signed out for security after 5 minutes of inactivity.",
+        "today": "TODAY"
     },
     "UZ": {
         "welcome_morning": "Xayrli tong", "welcome_day": "Xayrli kun", "welcome_evening": "Xayrli kech", "welcome_night": "Xayrli tun",
@@ -84,17 +97,20 @@ LANGS = {
         "summary": "OYLIK HISOBOT", "full_title": "OYLIK MA'LUMOT", "ss_warn": "Bu ma'lumotlar shaxsiy. Skrinshot va ekran yozuvi taqiqlanadi; olingan tasvirlar shaxsingiz bilan belgilanadi.",
         "verify_title": "XAVFSIZLIK TEKSHIRUVI", "verify_desc": "Robot emasligingizni tasdiqlash uchun quyidagi kodni kiriting.",
         "verify_field": "TASDIQLASH KODI", "verify_btn": "TASDIQLASH VA KIRISH", "verify_err": "Kod noto'g'ri, qayta urinib ko'ring.",
-        "new_code": "🔄 Yangi Kod", "back": "← Orqaga",
+        "new_code": "Yangi Kod", "back": "Orqaga",
         "disc_title": "MA'LUMOT",
         "disc_text": "Tizimdagi ma'lumotlar rasmiy emas; yangilanishi mumkin va faqat ma'lumot uchun beriladi.",
         "expand_all": "HAMMASINI OCHISH", "collapse_all": "HAMMASINI YOPISH",
-        "mail_ready": "So'rovingiz tayyor. Quyidagi tugmani bosing, pochta ilovangiz ochiladi.", "open_mail": "POCHTA ILOVASINI OCHISH",
+        "mail_ready": "So'rovingiz tayyor. Quyidagi tugmalardan biri bilan yuboring.", "open_mail": "POCHTA ILOVASINI OCHISH",
+        "open_wa": "WHATSAPP ORQALI YUBORISH",
         "m_id": "Tabel raqami", "m_name": "F.I.Sh", "m_role": "Lavozimi", "m_prefix": "E'tiroz",
         "login_locked": "Juda ko'p noto'g'ri kirish. Iltimos kuting.",
         "verify_locked": "Juda ko'p noto'g'ri kod. Iltimos kuting.",
         "forgot_title": "Parolni Unutdim", "forgot_desc": "Foydalanuvchi nomingizni kiriting; ma'lumotlaringiz bilan HR uchun parol so'rovi xati tayyorlanadi.",
         "forgot_btn": "SO'ROV YARATISH", "forgot_subject": "Parolni tiklash so'rovi",
-        "forgot_body": "Parolimni unutdim, yordam bera olasizmi?"
+        "forgot_body": "Parolimni unutdim, yordam bera olasizmi?",
+        "timeout": "5 daqiqa harakat bo'lmagani uchun xavfsizlik maqsadida tizimdan chiqildi.",
+        "today": "BUGUN"
     }
 }
 
@@ -135,141 +151,225 @@ def cevir_gorev(gorev, lang):
     return GOREV_MAP.get(g.upper(), {}).get(lang, g)
 
 # ------------------------------------------------------------------
-# TEMALAR (iç anahtar sabit, isim dile göre)
+# TEMA — Lacivert (açık) + telefon karanlık moddaysa otomatik koyu
 # ------------------------------------------------------------------
-THEMES = {
-    "corporate_light": {"bg_grad_1": "#f1f5f9", "bg_grad_2": "#dbe4f0", "card_bg": "rgba(255,255,255,0.95)",
-        "card_border": "rgba(15,23,42,0.10)", "text_main": "#0f172a", "text_soft": "#475569",
-        "accent": "#0d9488", "accent_2": "#4f46e5", "clock": "#0f766e", "input_bg": "#ffffff",
-        "input_text": "#0f172a", "shadow": "0 10px 26px rgba(15,23,42,0.10)", "overlay": "rgba(255,255,255,0.30)"}
-}
-THEME_NAMES = {
-    "corporate_light": {"TR": "Açık Kurumsal", "EN": "Corporate Light", "UZ": "Yorug' Korporativ"}
-}
+THEME_LIGHT = {"bg": "#eef1f5", "card": "#ffffff", "line": "#d5dbe3", "tx": "#14202e", "soft": "#56657a",
+               "acc": "#1e3a5f", "acc_tx": "#ffffff", "input": "#f7f9fb", "badge": "#ffd54a", "band": "#1e3a5f"}
+THEME_DARK = {"bg": "#11151b", "card": "#1a2029", "line": "#2b3440", "tx": "#e9edf2", "soft": "#94a0ae",
+              "acc": "#e4a53a", "acc_tx": "#11151b", "input": "#141920", "badge": "#e4a53a", "band": "#0b0e12"}
+
+def css_vars(t):
+    return ";".join(f"--{k.replace('_', '-')}:{v}" for k, v in t.items())
 
 # ------------------------------------------------------------------
 # OTURUM DURUMU
 # ------------------------------------------------------------------
 def init_state():
-    d = {'lang': "TR", 'theme': "corporate_light", 'logged_in': False, 'awaiting_verify': False,
+    d = {'lang': "TR", 'logged_in': False, 'awaiting_verify': False,
          'pending_user': None, 'verify_code': "", 'week_open': {}, 'itiraz_ready': False, 'itiraz_mailto': "",
-         'login_fails': 0, 'login_lock_until': 0.0, 'verify_fails': 0, 'verify_lock_until': 0.0,
-         'forgot_ready': False, 'forgot_mailto': ""}
+         'itiraz_wa': "", 'login_fails': 0, 'verify_fails': 0, 'forgot_ready': False, 'forgot_mailto': "",
+         'llock_key': None, 'vlock_key': None, 'last_active': time.time(), 'timed_out': False}
     for k, v in d.items():
         if k not in st.session_state:
             st.session_state[k] = v
 init_state()
 
-# Eski/geçersiz oturum değerlerine karşı koruma (KeyError önler)
-if st.session_state['theme'] not in THEMES:
-    st.session_state['theme'] = "corporate_light"
 if st.session_state['lang'] not in LANGS:
     st.session_state['lang'] = "TR"
 
 L = LANGS[st.session_state['lang']]
-T = THEMES[st.session_state['theme']]
 LNG = st.session_state['lang']
-
 now_tr = datetime.utcnow() + timedelta(hours=3)
-clock_init = now_tr.strftime("%d.%m.%Y | %H:%M:%S")
-ay_baslik = f"{AYLAR[LNG][now_tr.month]} {now_tr.year} {L['month_title']}"
+
+# ------------------------------------------------------------------
+# SUNUCU TARAFLI KİLİT (Fiori no'ya bağlı; sayfa yenilense de kalkmaz)
+# ------------------------------------------------------------------
+@st.cache_resource
+def lock_store():
+    return {"data": {}, "mutex": threading.Lock()}
+
+def lock_remaining(kind, key):
+    s = lock_store()
+    with s["mutex"]:
+        rec = s["data"].get((kind, key))
+        if not rec:
+            return 0
+        rem = int(math.ceil(rec.get("until", 0) - time.time()))
+        return rem if rem > 0 else 0
+
+def lock_fail(kind, key, seconds):
+    """Hatalı denemeyi kaydeder. MAX_TRY'a ulaşınca kilitler. Kilitlendiyse True döner."""
+    s = lock_store()
+    with s["mutex"]:
+        rec = s["data"].setdefault((kind, key), {"fails": 0, "until": 0})
+        if rec["until"] and rec["until"] <= time.time():
+            rec["until"] = 0
+        rec["fails"] += 1
+        if rec["fails"] >= MAX_TRY:
+            rec["fails"] = 0
+            rec["until"] = time.time() + seconds
+            return True
+        return False
+
+def lock_clear(kind, key):
+    s = lock_store()
+    with s["mutex"]:
+        s["data"].pop((kind, key), None)
+
+# ------------------------------------------------------------------
+# İKONLAR (ince çizgili SVG)
+# ------------------------------------------------------------------
+def icon(name, size=16):
+    paths = {
+        "info": '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+        "shield": '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+        "chart": '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+        "list": '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+        "flag": '<path d="M5 21V4h11l-1.5 4L16 12H5"/>',
+        "clock": '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+        "eye": '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    }
+    return (f'<svg class="ic" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+            f'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">{paths[name]}</svg>')
 
 # ------------------------------------------------------------------
 # CSS
 # ------------------------------------------------------------------
 st.markdown(f"""<style>
-.stApp {{ background: linear-gradient(135deg, {T["bg_grad_1"]} 0%, {T["bg_grad_2"]} 100%) !important; color: {T["text_main"]} !important; }}
-body {{ background: linear-gradient(135deg, {T["bg_grad_1"]} 0%, {T["bg_grad_2"]} 100%) !important; background-attachment: fixed !important; }}
-[data-testid="stAppViewContainer"]::before {{ content: ""; position: fixed; inset: 0; background: {T["overlay"]}; z-index: -1; }}
-.block-container {{ padding-top: 1.2rem !important; padding-bottom: 2.5rem !important; max-width: 900px !important; }}
-#live-clock {{ text-align: right; color: {T["clock"]}; font-family: 'Courier New', monospace; font-weight: 900; font-size: 21px; letter-spacing: 1.5px; padding-bottom: 14px; text-shadow: 0 2px 4px rgba(0,0,0,0.25); }}
-.month-title {{ text-align: center; color: {T["accent"]}; font-size: 18px; font-weight: 900; margin: 6px 0 24px; letter-spacing: 1.5px; }}
-.portal-title {{ text-align: center; color: {T["text_main"]}; letter-spacing: 1.5px; font-weight: 900; margin-bottom: 8px; font-size: 26px; line-height: 1.25; }}
-.verify-note {{ text-align: center; color: {T["text_soft"]}; font-size: 14px; font-weight: 600; margin-bottom: 16px; }}
-.kod-box {{ text-align: center; font-family: 'Courier New', monospace; font-size: 40px; font-weight: 900; letter-spacing: 12px; color: {T["accent"]}; background: {T["card_bg"]}; border: 2px dashed {T["accent"]}; border-radius: 14px; padding: 16px 10px; margin-bottom: 16px; }}
-.lock-wrap {{ text-align: center; background: {T["card_bg"]}; border: 1px solid {T["card_border"]}; border-radius: 18px; padding: 30px 20px; margin-top: 10px; box-shadow: {T["shadow"]}; }}
-.lock-msg {{ font-size: 16px; font-weight: 800; color: {T["accent_2"]}; margin: 10px 0; }}
-.lock-count {{ font-family: 'Courier New', monospace; font-size: 48px; font-weight: 900; color: {T["accent"]}; }}
-.user-header {{ font-size: 30px; font-weight: 900; color: {T["text_main"]}; margin-bottom: 4px; line-height: 1.2; }}
-.user-sub {{ font-size: 16px; font-weight: 700; color: {T["text_soft"]}; margin-bottom: 18px; text-transform: uppercase; letter-spacing: 0.5px; }}
-.glass-card {{ background: {T["card_bg"]}; border-radius: 18px; border: 1px solid {T["card_border"]}; padding: 22px; margin-bottom: 20px; color: {T["text_main"]}; box-shadow: {T["shadow"]}; }}
-.info-banner {{ background-color: {T["card_bg"]}; border-left: 5px solid {T["accent"]}; padding: 15px 16px; border-radius: 10px; margin-bottom: 20px; box-shadow: {T["shadow"]}; }}
-.info-title {{ margin: 0; color: {T["accent"]}; font-size: 14px; font-weight: 900; letter-spacing: 1px; }}
-.info-text {{ margin: 6px 0 0 0; font-size: 13.5px; font-weight: 600; color: {T["text_main"]}; opacity: 0.92; }}
-.warn-banner {{ background-color: rgba(239,68,68,0.12); border-left: 5px solid #ef4444; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 13px; font-weight: 700; color: {T["text_main"]}; }}
-.ozet-card {{ background: {T["card_bg"]}; border: 1px solid {T["card_border"]}; border-radius: 18px; padding: 22px; margin-bottom: 20px; box-shadow: {T["shadow"]}; }}
-.ozet-head {{ display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 900; letter-spacing: 1.5px; color: {T["accent"]}; text-transform: uppercase; margin-bottom: 16px; }}
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800;900&display=swap');
+:root {{ {css_vars(THEME_LIGHT)}; }}
+@media (prefers-color-scheme: dark) {{ :root {{ {css_vars(THEME_DARK)}; }} }}
+html, body, .stApp, [data-testid="stAppViewContainer"] {{ background: var(--bg) !important; color: var(--tx) !important; font-family: 'Source Sans 3', system-ui, sans-serif; }}
+[data-testid="stHeader"], [data-testid="stToolbar"], #MainMenu, footer {{ display: none !important; }}
+.block-container {{ padding-top: 0.6rem !important; padding-bottom: 2rem !important; max-width: 760px !important; }}
+.ic {{ vertical-align: -3px; margin-right: 6px; }}
+.month-title {{ text-align: center; color: var(--acc); font-size: 17px; font-weight: 900; margin: 10px 0 18px; letter-spacing: 1.5px; }}
+.portal-title {{ text-align: center; color: var(--tx); letter-spacing: 1.2px; font-weight: 900; margin: 10px 0 6px; font-size: 22px; line-height: 1.25; }}
+.verify-note {{ text-align: center; color: var(--soft); font-size: 14px; font-weight: 600; margin-bottom: 14px; }}
+.lock-wrap {{ text-align: center; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 26px 18px; margin: 10px 0 14px; }}
+.lock-wrap .ic {{ color: var(--acc); margin: 0; }}
+.lock-msg {{ font-size: 16px; font-weight: 800; color: var(--tx); margin: 10px 0; }}
+.lock-count {{ font-family: 'Courier New', monospace; font-size: 46px; font-weight: 900; color: var(--acc); }}
+.user-header {{ font-size: 26px; font-weight: 900; color: var(--tx); margin: 8px 0 4px; line-height: 1.2; }}
+.user-sub {{ font-size: 14px; font-weight: 700; color: var(--soft); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }}
+.info-banner {{ background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--acc); padding: 13px 15px; border-radius: 10px; margin-bottom: 12px; }}
+.info-title {{ margin: 0; color: var(--acc); font-size: 13px; font-weight: 900; letter-spacing: 1px; }}
+.info-text {{ margin: 5px 0 0 0; font-size: 13.5px; font-weight: 600; color: var(--tx); }}
+.warn-banner {{ background: rgba(216,74,74,0.10); border-left: 4px solid #d84a4a; padding: 11px 14px; border-radius: 10px; margin-bottom: 16px; font-size: 13px; font-weight: 700; color: var(--tx); }}
+.warn-banner .ic {{ color: #d84a4a; }}
+.ozet-card {{ background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-bottom: 16px; }}
+.ozet-head {{ font-size: 13px; font-weight: 900; letter-spacing: 1.5px; color: var(--acc); text-transform: uppercase; margin-bottom: 14px; }}
 .ozet-grid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }}
-.ozet-tile {{ background: rgba(148,163,184,0.08); border: 1px solid {T["card_border"]}; border-radius: 14px; padding: 16px 8px; text-align: center; }}
-.ozet-num {{ font-size: 30px; font-weight: 900; color: {T["text_main"]}; line-height: 1; }}
-.ozet-num.hl1 {{ color: {T["accent"]}; }}
-.ozet-num.hl2 {{ color: {T["accent_2"]}; }}
-.ozet-lbl {{ font-size: 12px; font-weight: 700; color: {T["text_soft"]}; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.4px; }}
+.ozet-tile {{ background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 16px 8px; text-align: center; }}
+.ozet-num {{ font-size: 32px; font-weight: 900; color: var(--tx); line-height: 1; font-variant-numeric: tabular-nums; }}
+.ozet-num.hl1 {{ color: var(--acc); }}
+.ozet-lbl {{ font-size: 12px; font-weight: 700; color: var(--soft); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.4px; }}
 .day-grid {{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; margin-bottom: 12px; }}
-.list-baslik {{ font-size: 13px; font-weight: 900; letter-spacing: 1px; color: {T["accent"]}; text-transform: uppercase; margin: 22px 0 8px; }}
+.list-baslik {{ font-size: 13px; font-weight: 900; letter-spacing: 1px; color: var(--acc); text-transform: uppercase; margin: 22px 0 8px; }}
 .full-list {{ display: grid; grid-template-columns: 1fr; gap: 7px; margin-bottom: 16px; }}
 .full-list .day-item {{ flex-direction: row; justify-content: flex-start; align-items: center; min-height: 0; padding: 10px 14px; gap: 12px; text-align: left; }}
 .full-list .day-meta {{ flex-direction: row; align-items: baseline; gap: 8px; }}
-.full-list .durum-text {{ font-size: 18px; min-width: 32px; }}
+.full-list .durum-text {{ font-size: 18px; min-width: 40px; }}
 .full-list .mesai-badge {{ margin: 0 0 0 auto; }}
-.day-item {{ display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border-radius: 11px; color: #fff !important; padding: 7px 3px; min-height: 74px; box-shadow: 0 5px 11px rgba(0,0,0,0.20); transition: transform 0.15s ease; gap: 3px; }}
-.day-item:hover {{ transform: translateY(-2px); box-shadow: 0 9px 18px rgba(0,0,0,0.28); }}
+.day-item {{ position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border-radius: 10px; color: #fff !important; padding: 7px 3px; min-height: 74px; gap: 3px; }}
 .day-meta {{ display: flex; flex-direction: column; align-items: center; gap: 2px; }}
-.durum-text {{ font-size: 20px; font-weight: 900; line-height: 1; text-shadow: 1px 1px 3px rgba(0,0,0,0.4); }}
+.durum-text {{ font-size: 20px; font-weight: 900; line-height: 1; }}
 .tarih-text {{ font-size: 12px; font-weight: 900; line-height: 1; letter-spacing: 0.2px; }}
-.gun-text {{ font-size: 10.5px; font-weight: 800; line-height: 1; opacity: 0.9; }}
-.mesai-badge {{ background: #facc15; color: #111; font-size: 11px; padding: 2px 7px; border-radius: 6px; margin-top: 2px; font-weight: 900; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }}
-.status-n {{ background: linear-gradient(135deg, #0d9488, #0f766e); border: 1px solid #2dd4bf; }}
-.status-htc {{ background: linear-gradient(135deg, #b45309, #92400e); border: 1px solid #fbbf24; }}
-.status-ht {{ background: linear-gradient(135deg, #4338ca, #3730a3); border: 1px solid #818cf8; }}
-.status-b {{ background: linear-gradient(135deg, #9f1239, #881337); border: 1px solid #fb7185; }}
-.status-bc {{ background: linear-gradient(135deg, #c2410c, #ea580c); border: 1px solid #fb923c; }}
-.status-ui {{ background: linear-gradient(135deg, #475569, #334155); border: 1px solid #94a3b8; }}
-.status-default {{ background: linear-gradient(135deg, #334155, #1e293b); border: 1px solid #64748b; }}
-.stTextInput > div > div > input, .stTextArea textarea, .stSelectbox > div > div {{ background-color: {T["input_bg"]} !important; color: {T["input_text"]} !important; border: 2px solid {T["card_border"]} !important; border-radius: 12px !important; }}
-.stTextInput label, .stTextArea label, .stSelectbox label {{ color: {T["text_soft"]} !important; font-weight: 700 !important; letter-spacing: 0.5px; }}
-/* Açık tema görünürlük garantisi (config.toml GEREKMEDEN, sadece CSS) */
-[data-baseweb="select"] *, [data-baseweb="input"] input {{ color: {T["input_text"]} !important; }}
-[data-baseweb="popover"] *, [data-baseweb="menu"] *, [role="option"] {{ color: {T["text_main"]} !important; }}
-[data-baseweb="menu"], [data-baseweb="popover"] ul {{ background: #ffffff !important; }}
-[data-testid="stExpander"], [data-testid="stExpander"] details {{ background: {T["card_bg"]} !important; }}
-[data-testid="stExpander"] summary, [data-testid="stExpander"] summary * {{ color: {T["text_main"]} !important; background: transparent !important; }}
-[data-testid="stExpander"] summary svg {{ fill: {T["text_main"]} !important; }}
-[data-testid="stWidgetLabel"] p, [data-testid="stWidgetLabel"] label {{ color: {T["text_soft"]} !important; }}
-[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] * {{ color: {T["text_soft"]} !important; }}
-[data-testid="stExpanderDetails"] p, [data-testid="stExpanderDetails"] li, [data-testid="stExpanderDetails"] strong {{ color: {T["text_main"]} !important; }}
-/* Radio seçimleri (dil + konu) — açık zeminde koyu yazı */
-[data-testid="stRadio"] label, [data-testid="stRadio"] p, [data-testid="stRadio"] div, [data-testid="stRadio"] span {{ color: {T["text_main"]} !important; }}
-[data-testid="stRadio"] [role="radiogroup"] label {{ background: {T["card_bg"]} !important; border: 1px solid {T["card_border"]}; border-radius: 10px; padding: 6px 12px !important; margin: 3px 6px 3px 0 !important; }}
-.stButton > button, .stLinkButton > a, .stForm [data-testid="stFormSubmitButton"] > button {{ width: 100%; border-radius: 12px !important; border: none !important; font-weight: 900 !important; min-height: 46px; letter-spacing: 0.5px; background: linear-gradient(90deg, {T["accent"]}, {T["accent_2"]}) !important; color: #0b1020 !important; text-shadow: none !important; box-shadow: 0 10px 22px rgba(0,0,0,0.20); }}
-.stButton > button[kind="secondary"] {{ background: {T["card_bg"]} !important; color: {T["text_main"]} !important; border: 1px solid {T["card_border"]} !important; box-shadow: none !important; text-align: left; }}
-.mert-signature {{ position: fixed; bottom: 12px; left: 15px; font-size: 12px; font-weight: 900; color: {T["text_soft"]}; opacity: 0.75; letter-spacing: 2px; z-index: 1000; }}
+.gun-text {{ font-size: 10.5px; font-weight: 800; line-height: 1; opacity: 0.85; }}
+.mesai-badge {{ background: var(--badge); color: #111; font-size: 11px; padding: 2px 8px; border-radius: 6px; margin-top: 2px; font-weight: 900; font-variant-numeric: tabular-nums; }}
+.day-item.today {{ outline: 3px solid var(--tx); outline-offset: 2px; }}
+.today-tag {{ position: absolute; top: -8px; left: 10px; font-size: 9px; font-weight: 900; background: var(--tx); color: var(--bg); padding: 1px 6px; border-radius: 4px; letter-spacing: .5px; }}
+.status-n {{ background: #2f6b52; }}
+.status-htc {{ background: #b3641a; }}
+.status-ht {{ background: #4b5aa8; }}
+.status-b {{ background: #9b2c3c; }}
+.status-bc {{ background: #c2531c; }}
+.status-ui {{ background: #6b7684; }}
+.status-default {{ background: #3b4452; }}
+.appeal-head {{ font-size: 19px; font-weight: 800; color: var(--tx); margin: 0 0 6px; }}
+.appeal-head .ic {{ color: var(--acc); }}
+.appeal-desc {{ font-size: 13.5px; font-weight: 600; color: var(--soft); font-style: italic; margin-bottom: 12px; }}
+.watermark {{ position: fixed; inset: 0; pointer-events: none; z-index: 999; overflow: hidden; }}
+.watermark span {{ position: absolute; white-space: nowrap; font-size: 13px; font-weight: 800; color: var(--tx); opacity: 0.07; transform: rotate(-28deg); letter-spacing: 1px; user-select: none; }}
+.page-foot {{ text-align: center; font-size: 12px; color: var(--soft); margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--line); letter-spacing: .3px; }}
+/* Streamlit bileşenleri */
+[data-testid="stVerticalBlockBorderWrapper"] {{ background: var(--card) !important; border-color: var(--line) !important; border-radius: 12px !important; }}
+.stTextInput > div > div > input, .stTextArea textarea, .stSelectbox > div > div {{ background-color: var(--input) !important; color: var(--tx) !important; border: 1.5px solid var(--line) !important; border-radius: 10px !important; }}
+[data-baseweb="input"], [data-baseweb="base-input"] {{ background: var(--input) !important; border-color: var(--line) !important; border-radius: 10px !important; }}
+[data-baseweb="input"] input {{ color: var(--tx) !important; -webkit-text-fill-color: var(--tx) !important; }}
+[data-testid="stWidgetLabel"] p, [data-testid="stWidgetLabel"] label {{ color: var(--soft) !important; font-weight: 700 !important; letter-spacing: 0.5px; }}
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] * {{ color: var(--soft) !important; }}
+[data-testid="stExpander"] details {{ background: var(--card) !important; border: 1px solid var(--line) !important; border-radius: 10px !important; }}
+[data-testid="stExpander"] summary, [data-testid="stExpander"] summary * {{ color: var(--tx) !important; background: transparent !important; }}
+[data-testid="stExpanderDetails"] p, [data-testid="stExpanderDetails"] li, [data-testid="stExpanderDetails"] strong {{ color: var(--tx) !important; }}
+[data-testid="stRadio"] label, [data-testid="stRadio"] p {{ color: var(--tx) !important; }}
+[data-testid="stRadio"] [role="radiogroup"] label {{ background: var(--card) !important; border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px !important; margin: 3px 6px 3px 0 !important; }}
+.stButton, .stLinkButton, [data-testid="stFormSubmitButton"], [data-testid="stElementContainer"]:has(.stButton), [data-testid="stElementContainer"]:has(.stLinkButton), [data-testid="stElementContainer"]:has([data-testid="stFormSubmitButton"]) {{ width: 100% !important; }}
+.stButton > button, .stLinkButton > a, [data-testid="stFormSubmitButton"] > button {{ width: 100% !important; border-radius: 10px !important; border: none !important; font-weight: 800 !important; min-height: 46px; letter-spacing: 0.5px; background: var(--acc) !important; color: var(--acc-tx) !important; box-shadow: none !important; }}
+.stButton > button p, .stLinkButton > a p, [data-testid="stFormSubmitButton"] > button p {{ color: var(--acc-tx) !important; font-weight: 800 !important; }}
+.stButton > button[kind="secondary"] {{ background: var(--card) !important; color: var(--tx) !important; border: 1px solid var(--line) !important; text-align: left; justify-content: flex-start; }}
+.stButton > button[kind="secondary"] p {{ color: var(--tx) !important; font-weight: 700 !important; }}
+[class*="st-key-wa_btn"] .stLinkButton > a {{ background: #1f9d55 !important; }}
+[class*="st-key-wa_btn"] .stLinkButton > a p {{ color: #fff !important; }}
+[data-testid="stAlert"] {{ border-radius: 10px !important; }}
+[data-testid="stImage"] img {{ border-radius: 12px; border: 1px solid var(--line); }}
+hr {{ border-color: var(--line) !important; }}
 @media (max-width: 600px) {{
-    .portal-title {{ font-size: 21px; }} .month-title {{ font-size: 15px; }} .user-header {{ font-size: 24px; }} #live-clock {{ font-size: 16px; }}
-    .kod-box {{ font-size: 32px; letter-spacing: 8px; }}
+    .portal-title {{ font-size: 19px; }} .month-title {{ font-size: 15px; }} .user-header {{ font-size: 22px; }}
     .day-grid {{ grid-template-columns: 1fr; gap: 7px; }}
     .day-item {{ flex-direction: row; justify-content: flex-start; align-items: center; min-height: 0; padding: 10px 14px; gap: 12px; text-align: left; }}
     .day-meta {{ flex-direction: row; align-items: baseline; gap: 8px; }}
-    .durum-text {{ font-size: 18px; min-width: 32px; }}
+    .durum-text {{ font-size: 18px; min-width: 40px; }}
     .mesai-badge {{ margin: 0 0 0 auto; }}
 }}
-</style>
-<div id="live-clock">{clock_init}</div>
-<script>
-function updateClock() {{
-    const el = document.getElementById('live-clock'); if(!el) return;
-    const now = new Date(); const trTime = new Date(now.toLocaleString('en-US', {{ timeZone: 'Europe/Istanbul' }}));
-    const d=String(trTime.getDate()).padStart(2,'0'), m=String(trTime.getMonth()+1).padStart(2,'0'), y=trTime.getFullYear();
-    const h=String(trTime.getHours()).padStart(2,'0'), i=String(trTime.getMinutes()).padStart(2,'0'), s=String(trTime.getSeconds()).padStart(2,'0');
-    el.innerHTML = d+"."+m+"."+y+" | "+h+":"+i+":"+s;
-}}
-setInterval(updateClock, 1000);
-</script>
-""", unsafe_allow_html=True)
+</style>""", unsafe_allow_html=True)
 
 # ------------------------------------------------------------------
-# YARDIMCI FONKSİYONLAR
+# ÜST BANT (canlı saat) + telefonda rakam klavyesi + 5 dk otomatik çıkış
 # ------------------------------------------------------------------
+def top_band(numeric_inputs=False, idle_logout=False):
+    band_l, band_d = THEME_LIGHT["band"], THEME_DARK["band"]
+    components.html(f"""
+<div class="band"><span class="t">FİLYOS FAZ-2 · PERSONEL PUANTAJI</span><span id="c"></span></div>
+<style>
+html,body{{margin:0;background:transparent;font-family:'Source Sans 3',system-ui,sans-serif}}
+.band{{display:flex;justify-content:space-between;align-items:center;background:{band_l};color:#fff;
+padding:0 14px;height:40px;box-sizing:border-box;border-radius:10px;font-size:clamp(9px,2.75vw,12px);font-weight:700;letter-spacing:.3px;white-space:nowrap;gap:10px}}
+.band .t{{overflow:hidden;text-overflow:ellipsis}}
+.band #c{{flex:none;font-family:'Courier New',monospace;font-weight:700;opacity:.9;letter-spacing:0}}
+@media (prefers-color-scheme: dark){{.band{{background:{band_d};border:1px solid #2b3440}}}}
+
+</style>
+<script>
+function tick(){{
+  const t=new Date(new Date().toLocaleString('en-US',{{timeZone:'Europe/Istanbul'}}));
+  const p=n=>String(n).padStart(2,'0');
+  document.getElementById('c').textContent=p(t.getDate())+'.'+p(t.getMonth()+1)+'.'+t.getFullYear()+'  '+p(t.getHours())+':'+p(t.getMinutes());
+}}
+tick(); setInterval(tick,1000);
+let P; try {{ P = window.parent.document; }} catch(e) {{ P = null; }}
+{"" if not numeric_inputs else '''
+function numPad(){
+  if(!P) return;
+  P.querySelectorAll('input[type="text"],input[type="password"]').forEach(function(i){
+    if(i.getAttribute('inputmode')!=='numeric'){ i.setAttribute('inputmode','numeric'); i.setAttribute('pattern','[0-9]*'); i.setAttribute('autocomplete','off'); }
+  });
+}
+numPad(); if(P){ new MutationObserver(numPad).observe(P.body,{childList:true,subtree:true}); }
+'''}
+{"" if not idle_logout else f'''
+if(P){{
+  let last=Date.now();
+  ['click','touchstart','scroll','keydown','mousemove'].forEach(function(ev){{ P.addEventListener(ev,function(){{last=Date.now();}},{{passive:true,capture:true}}); }});
+  setInterval(function(){{
+    if(Date.now()-last > {IDLE_SEC*1000}){{
+      try{{ const w=window.parent; const u=new URL(w.location.href); u.searchParams.set('timeout','1'); w.location.href=u.toString(); }}catch(e){{}}
+    }}
+  }},5000);
+}}
+'''}
+</script>""", height=44)
+
 @st.cache_data
 def load_data():
     try:
@@ -288,6 +388,9 @@ def parse_date_super_safe(t_col):
     except Exception:
         return None
 
+def get_date_cols(df):
+    return [c for c in df.columns if isinstance(c, (datetime, pd.Timestamp)) or '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
+
 def get_status_class(durum):
     durum = str(durum).strip().upper()
     return {"N": "status-n", "HTÇ": "status-htc", "HT": "status-ht", "BÇ": "status-bc", "B": "status-b", "Üİ": "status-ui"}.get(durum, "status-default")
@@ -296,98 +399,178 @@ def norm_key(v):
     s = str(v).strip()
     return s[:-2] if s.endswith(".0") else s
 
-def set_lock(param_key, seconds):
-    st.query_params[param_key] = str(int(time.time() + seconds))
-
-def clear_lock(param_key):
+# ------------------------------------------------------------------
+# RESİMLİ DOĞRULAMA KODU (bozuk / karışık)
+# ------------------------------------------------------------------
+def _font(size):
+    for f in ["DejaVuSans-Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+              "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", "arialbd.ttf"]:
+        try:
+            return ImageFont.truetype(f, size)
+        except Exception:
+            continue
     try:
-        del st.query_params[param_key]
+        return ImageFont.load_default(size=size)
     except Exception:
-        pass
+        return ImageFont.load_default()
 
-def check_lock(param_key, mesaj):
-    """URL'ye gömülü kilit süresini kontrol eder. Kilitliyse geri sayan ekranı
-    gösterir (sunucu taraflı, JS'siz). Süre bitince kilidi temizler.
-    Sayfa yenilense bile URL'de kaldığı için kilit devam eder."""
-    val = st.query_params.get(param_key)
-    if not val:
-        return
-    try:
-        lock_ts = float(val)
-    except Exception:
-        clear_lock(param_key)
-        return
-    remaining = int(round(lock_ts - time.time()))
-    if remaining > 0:
-        st.markdown(f"""
-            <div class="lock-wrap">
-                <div style="font-size:44px;">⏳</div>
-                <div class="lock-msg">{mesaj}</div>
-                <div class="lock-count">{remaining}</div>
-            </div>
-        """, unsafe_allow_html=True)
-        time.sleep(1)
-        st.rerun()
-    else:
-        clear_lock(param_key)
+def captcha_image(code):
+    W, H = 320, 100
+    rnd = random.Random()
+    img = Image.new("RGB", (W, H), (244, 241, 232))
+    d = ImageDraw.Draw(img)
+    for _ in range(110):  # arka plan noktaları
+        x, y = rnd.randint(0, W), rnd.randint(0, H)
+        r = rnd.randint(1, 2)
+        c = rnd.randint(150, 200)
+        d.ellipse((x - r, y - r, x + r, y + r), fill=(c, c - 8, c + 6))
+    for _ in range(2):  # arka plan ince eğriler
+        a, f, ph = rnd.uniform(12, 25), rnd.uniform(40, 70), rnd.uniform(0, 6.28)
+        y0 = rnd.randint(30, 70)
+        d.line([(x, int(y0 + a * math.sin(x / f + ph))) for x in range(0, W + 6, 6)], fill=(170, 160, 150), width=2)
+    colors = [(27, 59, 111), (122, 33, 48), (40, 88, 58), (85, 58, 130), (20, 32, 46)]
+    font = _font(56)
+    x = 22
+    for ch in code:
+        tile = Image.new("RGBA", (100, 110), (0, 0, 0, 0))
+        ImageDraw.Draw(tile).text((50, 55), ch, font=font, fill=rnd.choice(colors) + (255,), anchor="mm")
+        tile = tile.rotate(rnd.randint(-25, 25), resample=Image.BICUBIC)
+        img.paste(tile, (x, rnd.randint(-12, 2)), tile)
+        x += rnd.randint(64, 72)
+    src = img.copy()  # hafif dalga bozulması
+    px_s, px_d = src.load(), img.load()
+    amp, per, ph = rnd.uniform(2, 3.5), rnd.uniform(30, 45), rnd.uniform(0, 6.28)
+    for yy in range(H):
+        off = int(amp * math.sin(2 * math.pi * yy / per + ph))
+        for xx in range(W):
+            px_d[xx, yy] = px_s[min(W - 1, max(0, xx + off)), yy]
+    d = ImageDraw.Draw(img)
+    a, f, ph = rnd.uniform(10, 18), rnd.uniform(35, 55), rnd.uniform(0, 6.28)
+    d.line([(x, int(H / 2 + a * math.sin(x / f + ph))) for x in range(0, W + 6, 6)], fill=(45, 45, 45), width=2)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
+
+def new_code():
+    st.session_state['verify_code'] = f"{random.randint(0, 9999):04d}"
+    st.session_state['captcha_png'] = captcha_image(st.session_state['verify_code'])
+
+def show_lock(remaining, mesaj):
+    st.markdown(f"""
+        <div class="lock-wrap">{icon('clock', 40)}
+            <div class="lock-msg">{mesaj}</div>
+            <div class="lock-count">{remaining}</div>
+        </div>""", unsafe_allow_html=True)
 
 def build_day_item(t_col, row_g, row_s, date_mapping, lng):
     durum = str(row_g.get(t_col, "")).strip().upper()   # HARF AYNI KALIR (çevrilmez)
     mesai = str(row_s.get(t_col, "")).strip()
+    if mesai.endswith(".0"):
+        mesai = mesai[:-2]
     dt_obj = date_mapping.get(t_col)
+    today_cls, today_tag = "", ""
     if dt_obj:
         day_label = f"{str(dt_obj.day).zfill(2)} {AYLAR[lng][dt_obj.month]}"
         g_adi = GUNLER[lng][dt_obj.weekday()]
+        if dt_obj.date() == now_tr.date():
+            today_cls, today_tag = " today", f'<span class="today-tag">{L["today"]}</span>'
     else:
         day_label = str(t_col).split(' ')[0]; g_adi = ""
     cls = get_status_class(durum)
-    mesai_html = f'<div class="mesai-badge">⚡ {mesai} {L["overtime"]}</div>' if mesai not in ["0", "0.0", "nan", "", "None"] else ""
-    return (f'<div class="day-item {cls}"><span class="durum-text">{durum}</span>'
+    mesai_html = f'<div class="mesai-badge">{mesai} {L["overtime"]}</div>' if mesai not in ["0", "0.0", "nan", "", "None"] else ""
+    return (f'<div class="day-item {cls}{today_cls}">{today_tag}<span class="durum-text">{durum}</span>'
             f'<div class="day-meta"><span class="tarih-text">{day_label}</span>'
             f'<span class="gun-text">{g_adi}</span></div>{mesai_html}</div>')
 
+def watermark(text):
+    spans = "".join(f'<span style="top:{r * 120 - 60}px;left:{(r % 2) * -110 - 40}px">'
+                    f'{text} &nbsp;&nbsp;&nbsp; {text} &nbsp;&nbsp;&nbsp; {text}</span>' for r in range(14))
+    st.markdown(f'<div class="watermark">{spans}</div>', unsafe_allow_html=True)
+
+def footer():
+    st.markdown('<div class="page-foot">Filyos Faz-2 · Personel ve Çalışma İlişkileri</div>', unsafe_allow_html=True)
+
+def do_logout():
+    for k in ['logged_in', 'awaiting_verify', 'itiraz_ready']:
+        st.session_state[k] = False
+    st.session_state['user_data'] = None
+    st.session_state['pending_user'] = None
+
 df = load_data()
+
+# Ay başlığı Excel'deki tarihlerden alınır (bugünün tarihinden değil)
+ay_ref = now_tr
+if df is not None:
+    _d = [parse_date_super_safe(c) for c in get_date_cols(df)]
+    _d = [x for x in _d if x]
+    if _d:
+        ay_ref = _d[0]
+ay_baslik = f"{AYLAR[LNG][ay_ref.month]} {ay_ref.year} {L['month_title']}"
+
+# 5 dk hareketsizlik — sunucu tarafı yedek kontrol
+if st.query_params.get("timeout"):
+    do_logout()
+    st.session_state['timed_out'] = True
+    try:
+        del st.query_params["timeout"]
+    except Exception:
+        pass
+if st.session_state['logged_in'] and time.time() - st.session_state['last_active'] > IDLE_SEC:
+    do_logout()
+    st.session_state['timed_out'] = True
+st.session_state['last_active'] = time.time()
 
 # ==================================================================
 # EKRAN 1 — GİRİŞ
 # ==================================================================
 if not st.session_state['logged_in'] and not st.session_state['awaiting_verify']:
+    top_band(numeric_inputs=True)
     st.markdown(f"<div class='month-title'>{ay_baslik}</div>", unsafe_allow_html=True)
 
-    # Şifre kilidi (3 hatalı -> 3 dk), geri sayan
-    check_lock('llock', L['login_locked'])
+    if st.session_state.get('timed_out'):
+        st.info(L['timeout'])
 
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.radio(L['lang'], ["TR", "EN", "UZ"], key='lang', format_func=lambda k: LANG_NAMES[k], horizontal=True)
+    # Şifre kilidi (3 hatalı -> 3 dk) — Fiori no'ya bağlı, sunucuda tutulur
+    lk = st.session_state.get('llock_key')
+    if lk:
+        rem = lock_remaining("login", lk)
+        if rem > 0:
+            show_lock(rem, L['login_locked'])
+            time.sleep(1)
+            st.rerun()
+        else:
+            st.session_state['llock_key'] = None
 
-    sicil = st.text_input(L['sicil'])
-    sifre = st.text_input(L['pass'], type="password")
+    with st.container(border=True):
+        st.radio(L['lang'], ["TR", "EN", "UZ"], key='lang', format_func=lambda k: LANG_NAMES[k], horizontal=True)
+        sicil = st.text_input(L['sicil'])
+        sifre = st.text_input(L['pass'], type="password")
 
-    if st.button(L['login'], type="primary"):
-        if df is not None:
-            fiori_col = df['FİORİ NO'].map(norm_key)
-            dogum_col = df['DOĞUM YILI'].map(norm_key)
-            res = df[(fiori_col == norm_key(sicil)) & (dogum_col == norm_key(sifre))]
-            if not res.empty:
-                clear_lock('llock')
-                st.session_state['pending_user'] = res
-                st.session_state['awaiting_verify'] = True
-                st.session_state['verify_code'] = f"{random.randint(0, 9999):04d}"
-                st.session_state['verify_fails'] = 0
-                st.session_state['login_fails'] = 0
+        if st.button(L['login'], type="primary", icon=":material/login:"):
+            key = norm_key(sicil)
+            if key and lock_remaining("login", key) > 0:
+                st.session_state['llock_key'] = key
                 st.rerun()
-            else:
-                st.session_state['login_fails'] += 1
-                if st.session_state['login_fails'] >= MAX_TRY:
-                    set_lock('llock', LOGIN_LOCK_SEC)
-                    st.session_state['login_fails'] = 0
+            if df is not None:
+                fiori_col = df['FİORİ NO'].map(norm_key)
+                dogum_col = df['DOĞUM YILI'].map(norm_key)
+                res = df[(fiori_col == key) & (dogum_col == norm_key(sifre))]
+                if not res.empty:
+                    lock_clear("login", key)
+                    st.session_state['timed_out'] = False
+                    st.session_state['pending_user'] = res
+                    st.session_state['awaiting_verify'] = True
+                    new_code()
                     st.rerun()
                 else:
-                    st.error("❌ " + L['err'])
-    st.markdown('</div>', unsafe_allow_html=True)
+                    if lock_fail("login", key or "-", LOGIN_LOCK_SEC):
+                        st.session_state['llock_key'] = key or "-"
+                        st.rerun()
+                    else:
+                        st.error(L['err'])
 
     # Şifremi Unuttum
-    with st.expander("🔑 " + L['forgot_title']):
+    with st.expander(L['forgot_title'], icon=":material/key:"):
         st.caption(L['forgot_desc'])
         with st.form("forgot_form"):
             f_sicil = st.text_input(L['sicil'], key="forgot_input")
@@ -403,74 +586,86 @@ if not st.session_state['logged_in'] and not st.session_state['awaiting_verify']
             st.session_state['forgot_mailto'] = f"mailto:{MAIL_ADRES}?subject={urllib.parse.quote(L['forgot_subject'])}&body={urllib.parse.quote(govde)}"
             st.session_state['forgot_ready'] = True
         if st.session_state.get('forgot_ready'):
-            st.success("✅ " + L['mail_ready'])
-            st.link_button("📧 " + L['open_mail'], st.session_state['forgot_mailto'])
+            st.success(L['mail_ready'])
+            st.link_button(L['open_mail'], st.session_state['forgot_mailto'], icon=":material/mail:")
+    footer()
 
 # ==================================================================
-# EKRAN 2 — DOĞRULAMA
+# EKRAN 2 — DOĞRULAMA (resimli kod)
 # ==================================================================
 elif st.session_state['awaiting_verify'] and not st.session_state['logged_in']:
-    # Kod kilidi (3 hatalı -> 30 sn), geri sayan
-    st.markdown(f"<h1 class='portal-title'>🔐 {L['verify_title']}</h1>", unsafe_allow_html=True)
-    check_lock('vlock', L['verify_locked'])
+    top_band(numeric_inputs=True)
+    st.markdown(f"<div class='portal-title'>{icon('shield', 22)}{L['verify_title']}</div>", unsafe_allow_html=True)
+
+    p_user = st.session_state['pending_user']
+    vkey = norm_key(p_user.iloc[0]['FİORİ NO'])
+
+    # Kod kilidi (3 hatalı -> 30 sn) — Fiori no'ya bağlı, sunucuda tutulur
+    rem = lock_remaining("verify", vkey)
+    if rem > 0:
+        show_lock(rem, L['verify_locked'])
+        time.sleep(1)
+        st.rerun()
 
     st.markdown(f"<div class='verify-note'>{L['verify_desc']}</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='kod-box'>{st.session_state['verify_code']}</div>", unsafe_allow_html=True)
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    if not st.session_state.get('captcha_png'):
+        new_code()
+    st.image(st.session_state['captcha_png'], use_container_width=True)
 
-    girilen_kod = st.text_input(L['verify_field'], max_chars=4)
+    with st.container(border=True):
+        girilen_kod = st.text_input(L['verify_field'], max_chars=4)
 
-    if st.button(L['verify_btn'], type="primary"):
-        if str(girilen_kod).strip() == st.session_state['verify_code']:
-            clear_lock('vlock'); clear_lock('llock')
-            st.session_state['user_data'] = st.session_state['pending_user']
-            st.session_state['logged_in'] = True
-            st.session_state['awaiting_verify'] = False
-            st.session_state['pending_user'] = None
-            st.session_state['verify_fails'] = 0
-            st.rerun()
-        else:
-            st.session_state['verify_fails'] += 1
-            if st.session_state['verify_fails'] >= MAX_TRY:
-                set_lock('vlock', VERIFY_LOCK_SEC)
-                st.session_state['verify_fails'] = 0
+        if st.button(L['verify_btn'], type="primary", icon=":material/verified_user:"):
+            if str(girilen_kod).strip() == st.session_state['verify_code']:
+                lock_clear("verify", vkey)
+                st.session_state['user_data'] = p_user
+                st.session_state['logged_in'] = True
+                st.session_state['awaiting_verify'] = False
+                st.session_state['pending_user'] = None
+                st.session_state['captcha_png'] = None
                 st.rerun()
             else:
-                st.error("🤖 " + L['verify_err'])
+                if lock_fail("verify", vkey, VERIFY_LOCK_SEC):
+                    new_code()
+                    st.rerun()
+                else:
+                    st.error(L['verify_err'])
 
-    cyk1, cyk2 = st.columns(2)
-    with cyk1:
-        if st.button(L['new_code']):
-            st.session_state['verify_code'] = f"{random.randint(0, 9999):04d}"
-            st.rerun()
-    with cyk2:
-        if st.button(L['back']):
-            st.session_state['awaiting_verify'] = False
-            st.session_state['pending_user'] = None
-            st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+        cyk1, cyk2 = st.columns(2)
+        with cyk1:
+            if st.button(L['new_code'], icon=":material/refresh:"):
+                new_code()
+                st.rerun()
+        with cyk2:
+            if st.button(L['back'], icon=":material/arrow_back:"):
+                st.session_state['awaiting_verify'] = False
+                st.session_state['pending_user'] = None
+                st.session_state['captcha_png'] = None
+                st.rerun()
+    footer()
 
 # ==================================================================
 # EKRAN 3 — ANA PANEL
 # ==================================================================
 else:
+    top_band(idle_logout=True)
     u_df = st.session_state['user_data']
 
     ust1, ust2 = st.columns([2, 1])
     with ust1:
         st.radio(L['lang'], ["TR", "EN", "UZ"], key='lang', format_func=lambda k: LANG_NAMES[k], horizontal=True, label_visibility="collapsed")
     with ust2:
-        if st.button("🚪 " + L['logout'], type="primary", use_container_width=True):
-            for k in ['logged_in', 'awaiting_verify', 'itiraz_ready']:
-                st.session_state[k] = False
-            st.session_state['user_data'] = None
-            st.session_state['pending_user'] = None
+        if st.button(L['logout'], type="primary", use_container_width=True, icon=":material/logout:"):
+            do_logout()
             st.rerun()
 
     row_g = u_df[u_df['N-M'].astype(str).str.contains('Gün', na=False, case=False)].iloc[0]
     row_s = u_df[u_df['N-M'].astype(str).str.contains('SAAT', na=False, case=False)].iloc[0]
 
-    t_cols = [c for c in df.columns if isinstance(c, (datetime, pd.Timestamp)) or '202' in str(c) or ('.' in str(c) and len(str(c)) >= 8)]
+    # Filigran: ad + Fiori no + tarih/saat
+    watermark(f"{row_g['AD SOYAD']} · {norm_key(row_g['FİORİ NO'])} · {now_tr.strftime('%d.%m.%Y %H:%M')}")
+
+    t_cols = get_date_cols(df)
     date_mapping = {t_col: parse_date_super_safe(t_col) for t_col in t_cols}
 
     calc_total = 0
@@ -491,25 +686,25 @@ else:
     hg = now_tr.hour
     greet = (L["welcome_morning"] if 5 <= hg < 12 else L["welcome_day"] if 12 <= hg < 18 else L["welcome_evening"] if 18 <= hg < 23 else L["welcome_night"])
 
-    st.write("")
     st.markdown(f'<div class="user-header">{greet}, {row_g["AD SOYAD"]}</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="user-sub">{cevir_gorev(row_g["GÖREVİ"], LNG)}</div>', unsafe_allow_html=True)
 
-    st.markdown(f"""<div class="info-banner"><h4 class="info-title">ℹ️ {L['disc_title']}</h4><p class="info-text">{L['disc_text']}</p></div>""", unsafe_allow_html=True)
+    st.markdown(f"""<div class="info-banner"><div class="info-title">{icon('info')}{L['disc_title']}</div><p class="info-text">{L['disc_text']}</p></div>""", unsafe_allow_html=True)
+    st.markdown(f"""<div class="warn-banner">{icon('eye')}{L['ss_warn']}</div>""", unsafe_allow_html=True)
 
     st.markdown(f"""
         <div class="ozet-card">
-            <div class="ozet-head">📊 {L['summary']}</div>
+            <div class="ozet-head">{icon('chart')}{L['summary']}</div>
             <div class="ozet-grid">
                 <div class="ozet-tile"><div class="ozet-num hl1">{odenecek}</div><div class="ozet-lbl">{L['paid_days']}</div></div>
-                <div class="ozet-tile"><div class="ozet-num hl2">{toplam_mesai}</div><div class="ozet-lbl">{L['total_over']}</div></div>
+                <div class="ozet-tile"><div class="ozet-num">{toplam_mesai}</div><div class="ozet-lbl">{L['total_over']}</div></div>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
     st.write("---")
 
-    with st.expander(f"ℹ️ {L['legend']}"):
+    with st.expander(L['legend'], icon=":material/info:"):
         for k, v in STATUS_MAP.items():
             st.markdown(f"**{k}:** {v[LNG]}")
 
@@ -518,7 +713,8 @@ else:
         st.session_state['week_open'].setdefault(w, True)
 
     hepsi_acik = all(st.session_state['week_open'].get(w, True) for w in range(1, num_weeks + 1))
-    if st.button(("🔼 " + L['collapse_all']) if hepsi_acik else ("🔽 " + L['expand_all']), type="primary"):
+    if st.button(L['collapse_all'] if hepsi_acik else L['expand_all'], type="primary",
+                 icon=":material/unfold_less:" if hepsi_acik else ":material/unfold_more:"):
         yeni = not hepsi_acik
         for w in range(1, num_weeks + 1):
             st.session_state['week_open'][w] = yeni
@@ -527,8 +723,7 @@ else:
     for h_no, i in enumerate(range(0, len(t_cols), 7), 1):
         hafta = t_cols[i:i+7]
         acik = st.session_state['week_open'].get(h_no, True)
-        isaret = "➖" if acik else "➕"
-        if st.button(f"{isaret}  {L['week']} {h_no}", key=f"wtoggle_{h_no}"):
+        if st.button(f"{L['week']} {h_no}", key=f"wtoggle_{h_no}", icon=":material/remove:" if acik else ":material/add:"):
             st.session_state['week_open'][h_no] = not acik
             st.rerun()
         if acik:
@@ -539,9 +734,10 @@ else:
             st.markdown(grid_html, unsafe_allow_html=True)
 
     # 2. PUANTAJ — AYLIK VERİ (tüm günler alt alta), aç/kapa düğmeli
-    st.markdown(f'<div class="list-baslik">📋 {L["full_title"]}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="list-baslik">{icon("list")}{L["full_title"]}</div>', unsafe_allow_html=True)
     full_open = st.session_state.setdefault('full_open', True)
-    if st.button(("🔼 " + L['collapse_all']) if full_open else ("🔽 " + L['expand_all']), key="full_toggle", type="primary"):
+    if st.button(L['collapse_all'] if full_open else L['expand_all'], key="full_toggle", type="primary",
+                 icon=":material/unfold_less:" if full_open else ":material/unfold_more:"):
         st.session_state['full_open'] = not full_open
         st.rerun()
     if st.session_state.get('full_open', True):
@@ -551,25 +747,27 @@ else:
         full_html += '</div>'
         st.markdown(full_html, unsafe_allow_html=True)
 
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.subheader(f"🚨 {L['appeal_head']}")
-    st.markdown(f'<p style="font-size:14px; font-weight:600; color:{T["text_soft"]}; margin-bottom:15px;"><i>{L["appeal_desc"]}</i></p>', unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown(f'<div class="appeal-head">{icon("flag", 20)}{L["appeal_head"]}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="appeal-desc">{L["appeal_desc"]}</div>', unsafe_allow_html=True)
 
-    with st.form("itiraz_form"):
-        konu = st.radio(L['subject'], L['topic_opts'], horizontal=True, label_visibility="collapsed")
-        notunuz = st.text_area(L['note'])
-        gonder = st.form_submit_button("🚨 " + L['send'])
+        with st.form("itiraz_form"):
+            konu = st.radio(L['subject'], L['topic_opts'], horizontal=True, label_visibility="collapsed")
+            notunuz = st.text_area(L['note'])
+            gonder = st.form_submit_button(L['send'], icon=":material/send:")
 
-    if gonder:
-        mail_konu = f"{L['m_prefix']} - {row_g['AD SOYAD']} ({konu})"
-        mail_govde = (f"{L['m_id']}: {row_g['FİORİ NO']}\n{L['m_name']}: {row_g['AD SOYAD']}\n"
-                      f"{L['m_role']}: {row_g['GÖREVİ']}\n{L['subject']}: {konu}\n{L['note']}: {notunuz}")
-        st.session_state['itiraz_mailto'] = f"mailto:{MAIL_ADRES}?subject={urllib.parse.quote(mail_konu)}&body={urllib.parse.quote(mail_govde)}"
-        st.session_state['itiraz_ready'] = True
+        if gonder:
+            mail_konu = f"{L['m_prefix']} - {row_g['AD SOYAD']} ({konu})"
+            mail_govde = (f"{L['m_id']}: {norm_key(row_g['FİORİ NO'])}\n{L['m_name']}: {row_g['AD SOYAD']}\n"
+                          f"{L['m_role']}: {row_g['GÖREVİ']}\n{L['subject']}: {konu}\n{L['note']}: {notunuz}")
+            st.session_state['itiraz_mailto'] = f"mailto:{MAIL_ADRES}?subject={urllib.parse.quote(mail_konu)}&body={urllib.parse.quote(mail_govde)}"
+            wa_text = f"*{mail_konu}*\n{mail_govde}"
+            st.session_state['itiraz_wa'] = f"https://wa.me/{WHATSAPP_NO}?text={urllib.parse.quote(wa_text)}"
+            st.session_state['itiraz_ready'] = True
 
-    if st.session_state.get('itiraz_ready'):
-        st.success("✅ " + L['mail_ready'])
-        st.link_button("📧 " + L['open_mail'], st.session_state['itiraz_mailto'])
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown('<div class="mert-signature">POWERED BY Mert DÜZCÜK</div>', unsafe_allow_html=True)
+        if st.session_state.get('itiraz_ready'):
+            st.success(L['mail_ready'])
+            st.link_button(L['open_mail'], st.session_state['itiraz_mailto'], icon=":material/mail:")
+            with st.container(key="wa_btn"):
+                st.link_button(L['open_wa'], st.session_state['itiraz_wa'], icon=":material/chat:")
+    footer()
