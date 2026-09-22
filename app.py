@@ -7,6 +7,7 @@ import time
 import io
 import math
 import threading
+import re
 from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
@@ -52,7 +53,7 @@ LANGS = {
         "forgot_btn": "TALEP OLUŞTUR", "forgot_subject": "Şifre Talebi",
         "forgot_body": "Şifremi unuttum, yardımcı olabilir misiniz?",
         "timeout": "5 dakika işlem yapılmadığı için güvenlik amacıyla oturum kapatıldı.",
-        "today": "BUGÜN"
+        "today": "BUGÜN", "leave_left": "YILLIK İZİN KAZANMANIZA KALAN GÜN", "hire_date": "İŞE GİRİŞ TARİHİ", "day_unit": "gün"
     },
     "EN": {
         "welcome_morning": "Good Morning", "welcome_day": "Good Day", "welcome_evening": "Good Evening", "welcome_night": "Good Night",
@@ -81,7 +82,7 @@ LANGS = {
         "forgot_btn": "CREATE REQUEST", "forgot_subject": "Password Reset Request",
         "forgot_body": "I forgot my password, could you please help?",
         "timeout": "You were signed out for security after 5 minutes of inactivity.",
-        "today": "TODAY"
+        "today": "TODAY", "leave_left": "DAYS LEFT TO EARN ANNUAL LEAVE", "hire_date": "HIRE DATE", "day_unit": "days"
     },
     "UZ": {
         "welcome_morning": "Xayrli tong", "welcome_day": "Xayrli kun", "welcome_evening": "Xayrli kech", "welcome_night": "Xayrli tun",
@@ -110,7 +111,7 @@ LANGS = {
         "forgot_btn": "SO'ROV YARATISH", "forgot_subject": "Parolni tiklash so'rovi",
         "forgot_body": "Parolimni unutdim, yordam bera olasizmi?",
         "timeout": "5 daqiqa harakat bo'lmagani uchun xavfsizlik maqsadida tizimdan chiqildi.",
-        "today": "BUGUN"
+        "today": "BUGUN", "leave_left": "YILLIK TA'TIL HUQUQIGA QOLGAN KUN", "hire_date": "ISHGA KIRGAN SANA", "day_unit": "kun"
     }
 }
 
@@ -263,6 +264,8 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {{ background: var(--bg) 
 .ozet-tile {{ background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 16px 8px; text-align: center; }}
 .ozet-num {{ font-size: 32px; font-weight: 900; color: var(--tx); line-height: 1; font-variant-numeric: tabular-nums; }}
 .ozet-num.hl1 {{ color: var(--acc); }}
+.ozet-num.sm {{ font-size: 21px; padding: 5px 0 4px; }}
+.ozet-unit {{ font-size: 15px; font-weight: 700; color: var(--soft); }}
 .ozet-lbl {{ font-size: 12px; font-weight: 700; color: var(--soft); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.4px; }}
 .day-grid {{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; margin-bottom: 12px; }}
 .list-baslik {{ font-size: 13px; font-weight: 900; letter-spacing: 1px; color: var(--acc); text-transform: uppercase; margin: 22px 0 8px; }}
@@ -482,6 +485,26 @@ def build_day_item(t_col, row_g, row_s, date_mapping, lng):
             f'<div class="day-meta"><span class="tarih-text">{day_label}</span>'
             f'<span class="gun-text">{g_adi}</span></div>{mesai_html}</div>')
 
+def izin_sayisi(v):
+    """KALAN YILLIK İZİN hücresinden sayıyı alır ("KALAN SÜRE 25 GÜN" -> 25)."""
+    if v is None or (isinstance(v, float) and math.isnan(v)):
+        return "–"
+    if isinstance(v, (int, float)):
+        return int(v) if float(v) % 1 == 0 else str(v).replace(".", ",")
+    m = re.search(r"\d+(?:[.,]\d+)?", str(v))
+    return m.group(0) if m else "–"
+
+def giris_tarihi(v):
+    try:
+        if v is None or (isinstance(v, float) and math.isnan(v)):
+            return None
+        ts = pd.to_datetime(v, dayfirst=True)
+        if pd.isna(ts):
+            return None
+        return datetime(ts.year, ts.month, ts.day)
+    except Exception:
+        return None
+
 def watermark(text):
     spans = "".join(f'<span style="top:{r * 120 - 60}px;left:{(r % 2) * -110 - 40}px">'
                     f'{text} &nbsp;&nbsp;&nbsp; {text} &nbsp;&nbsp;&nbsp; {text}</span>' for r in range(14))
@@ -690,7 +713,10 @@ else:
     st.markdown(f'<div class="user-sub">{cevir_gorev(row_g["GÖREVİ"], LNG)}</div>', unsafe_allow_html=True)
 
     st.markdown(f"""<div class="info-banner"><div class="info-title">{icon('info')}{L['disc_title']}</div><p class="info-text">{L['disc_text']}</p></div>""", unsafe_allow_html=True)
-    st.markdown(f"""<div class="warn-banner">{icon('eye')}{L['ss_warn']}</div>""", unsafe_allow_html=True)
+
+    kalan_izin = izin_sayisi(row_g.get("KALAN YILLIK İZİN", None))
+    g_dt = giris_tarihi(row_g.get("İŞE GİRİŞ TARİHİ", None))
+    giris_txt = g_dt.strftime("%d.%m.%Y") if g_dt else "–"
 
     st.markdown(f"""
         <div class="ozet-card">
@@ -698,6 +724,8 @@ else:
             <div class="ozet-grid">
                 <div class="ozet-tile"><div class="ozet-num hl1">{odenecek}</div><div class="ozet-lbl">{L['paid_days']}</div></div>
                 <div class="ozet-tile"><div class="ozet-num">{toplam_mesai}</div><div class="ozet-lbl">{L['total_over']}</div></div>
+                <div class="ozet-tile"><div class="ozet-num">{kalan_izin}{'' if kalan_izin == '–' else f' <span class="ozet-unit">{L["day_unit"]}</span>'}</div><div class="ozet-lbl">{L['leave_left']}</div></div>
+                <div class="ozet-tile"><div class="ozet-num sm">{giris_txt}</div><div class="ozet-lbl">{L['hire_date']}</div></div>
             </div>
         </div>
     """, unsafe_allow_html=True)
